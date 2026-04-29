@@ -23,7 +23,7 @@ namespace ImgApp_2_WinForms
         private int maskHeight = 100;
 
         private string defaultFileName = "out.jpg";
-        private bool[] selectedChannels = new bool[] { true, true, true }; // R, G, B
+        private bool[] selectedChannels = new bool[] { true, true, true };
 
         private CurveEditorPanel curveEditor;
         private PictureBox histogramBox;
@@ -37,28 +37,17 @@ namespace ImgApp_2_WinForms
         // Поля для бинаризации
         private string selectedBinarizationMethod = null;
         private int? selectedBinarizationImage = null;
-        private const int WINDOW_SIZE = 15;  // Размер окна для локальных методов
-        private const double K_NIBLACK = -0.2;  // Коэффициент для Ниблека
-        private const double K_SAUVOLA = 0.5;   // Коэффициент для Сауволы
-        private const double K_BRADLEY = 0.15;  // Коэффициент для Брэдли-Рота
+        private const int WINDOW_SIZE = 15;
+        private const double K_NIBLACK = -0.2;
+        private const double K_SAUVOLA = 0.5;
+        private const double K_BRADLEY = 0.15;
 
-        // Копии для бинаризации (чтобы можно было отменить)
         private Bitmap binarizationBackup1 = null;
         private Bitmap binarizationBackup2 = null;
 
-        // Структура для хранения данных изображения в памяти
-        private class ImageData : IDisposable
-        {
-            public int Width { get; set; }
-            public int Height { get; set; }
-            public byte[] Data { get; set; }
-            public int Stride { get; set; }
-
-            public void Dispose()
-            {
-                Data = null;
-            }
-        }
+        // Поля для фильтрации (единое окно)
+        private string selectedFilterMethod = null;
+        private string currentFilterType = null; // "linear", "median", "gaussian"
 
         public Form1()
         {
@@ -82,6 +71,12 @@ namespace ImgApp_2_WinForms
 
             InitializeAdditionalControls();
 
+            // Подписываем обработчики для фильтрации
+            this.comboFilterImage.SelectedIndexChanged += ComboFilterImage_SelectedIndexChanged;
+            this.btnFilterApply.Click += BtnFilterApply_Click;
+            this.btnFilterSave.Click += BtnFilterSave_Click;
+            this.btnFilterCancel.Click += BtnFilterCancel_Click;
+
             isInitializing = false;
 
             UpdateHistogramForSelectedImage();
@@ -97,7 +92,6 @@ namespace ImgApp_2_WinForms
                 Padding = new Padding(10)
             };
 
-            // Редактор кривой
             curveEditor = new CurveEditorPanel
             {
                 Size = new Size(400, 400),
@@ -108,7 +102,6 @@ namespace ImgApp_2_WinForms
             curveEditor.CurveChanged += CurveEditor_CurveChanged;
             leftPanel.Controls.Add(curveEditor);
 
-            // Гистограмма
             histogramBox = new PictureBox
             {
                 Size = new Size(400, 150),
@@ -119,14 +112,12 @@ namespace ImgApp_2_WinForms
             };
             leftPanel.Controls.Add(histogramBox);
 
-            // Панель для селекторов
             Panel selectorPanel = new Panel
             {
                 Size = new Size(400, 35),
                 Location = new Point(10, 580)
             };
 
-            // Селектор изображения
             targetImageSelector = new ComboBox
             {
                 Size = new Size(140, 30),
@@ -138,7 +129,6 @@ namespace ImgApp_2_WinForms
             targetImageSelector.SelectedIndexChanged += TargetImageSelector_SelectedIndexChanged;
             selectorPanel.Controls.Add(targetImageSelector);
 
-            // Селектор типа интерполяции
             interpolationTypeSelector = new ComboBox
             {
                 Size = new Size(140, 30),
@@ -151,7 +141,6 @@ namespace ImgApp_2_WinForms
             selectorPanel.Controls.Add(interpolationTypeSelector);
 
             leftPanel.Controls.Add(selectorPanel);
-
             this.Controls.Add(leftPanel);
 
             int shift = leftPanel.Width;
@@ -161,7 +150,6 @@ namespace ImgApp_2_WinForms
             bOpen1.Location = new Point(bOpen1.Location.X + shift, bOpen1.Location.Y);
             bOpen2.Location = new Point(bOpen2.Location.X + shift, bOpen2.Location.Y);
 
-            // Кнопки сброса изображений (крестики справа от кнопок загрузки)
             Button resetButton1 = new Button
             {
                 Text = "✖",
@@ -202,7 +190,6 @@ namespace ImgApp_2_WinForms
             btnStart.Size = new Size(138, 40);
         }
 
-        // Кнопка сброса изображения
         private void ResetButton_Click(object sender, EventArgs e)
         {
             Button btn = sender as Button;
@@ -226,7 +213,6 @@ namespace ImgApp_2_WinForms
             UpdateHistogramForSelectedImage();
             UpdateApplyButtonState();
 
-            // Сбрасываем выбор, если удалено выбранное изображение для бинаризации
             if (selectedBinarizationImage.HasValue)
             {
                 var img = selectedBinarizationImage == 1 ? image1 : image2;
@@ -238,7 +224,6 @@ namespace ImgApp_2_WinForms
             }
         }
 
-        /// Смена типа интерполяции
         private void InterpolationTypeSelector_SelectedIndexChanged(object sender, EventArgs e)
         {
             bool isBSpline = interpolationTypeSelector.SelectedIndex == 1;
@@ -356,7 +341,6 @@ namespace ImgApp_2_WinForms
                 for (int x = 0; x < width; x++)
                 {
                     int offset = rowOffset + x * 4;
-                    // Вычисляем среднюю яркость (B+G+R)/3
                     int brightness = (data.Data[offset] + data.Data[offset + 1] + data.Data[offset + 2]) / 3;
                     System.Threading.Interlocked.Increment(ref histogram[brightness]);
                 }
@@ -413,7 +397,6 @@ namespace ImgApp_2_WinForms
             return imageData;
         }
 
-        // Сохранение массива байтов в изображение
         private void SaveImageData(Bitmap bitmap, ImageData imageData)
         {
             BitmapData bmpData = bitmap.LockBits(
@@ -444,29 +427,6 @@ namespace ImgApp_2_WinForms
             };
         }
 
-        // Масштабирование изображения через массивы байтов
-        private ImageData ResizeImageData(ImageData source, int newWidth, int newHeight)
-        {
-            using (var tempBitmap = new Bitmap(source.Width, source.Height, PixelFormat.Format32bppArgb))
-            {
-                BitmapData bmpData = tempBitmap.LockBits(
-                    new Rectangle(0, 0, source.Width, source.Height),
-                    ImageLockMode.WriteOnly,
-                    PixelFormat.Format32bppArgb);
-                Marshal.Copy(source.Data, 0, bmpData.Scan0, source.Data.Length);
-                tempBitmap.UnlockBits(bmpData);
-
-                using (var resizedBitmap = new Bitmap(newWidth, newHeight, PixelFormat.Format32bppArgb))
-                using (Graphics g = Graphics.FromImage(resizedBitmap))
-                {
-                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                    g.DrawImage(tempBitmap, 0, 0, newWidth, newHeight);
-
-                    return LoadImageData(resizedBitmap);
-                }
-            }
-        }
-
         private bool PrepareImagesForOperation(out ImageData data1, out ImageData data2, out int width, out int height)
         {
             data1 = null;
@@ -474,7 +434,6 @@ namespace ImgApp_2_WinForms
             width = 0;
             height = 0;
 
-            // Использование преобразованных копий (если они есть)
             var img1 = image1Copy ?? image1;
             var img2 = image2Copy ?? image2;
 
@@ -509,6 +468,27 @@ namespace ImgApp_2_WinForms
             return true;
         }
 
+        private ImageData ResizeImageData(ImageData source, int newWidth, int newHeight)
+        {
+            using (var tempBitmap = new Bitmap(source.Width, source.Height, PixelFormat.Format32bppArgb))
+            {
+                BitmapData bmpData = tempBitmap.LockBits(
+                    new Rectangle(0, 0, source.Width, source.Height),
+                    ImageLockMode.WriteOnly,
+                    PixelFormat.Format32bppArgb);
+                Marshal.Copy(source.Data, 0, bmpData.Scan0, source.Data.Length);
+                tempBitmap.UnlockBits(bmpData);
+
+                using (var resizedBitmap = new Bitmap(newWidth, newHeight, PixelFormat.Format32bppArgb))
+                using (Graphics g = Graphics.FromImage(resizedBitmap))
+                {
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    g.DrawImage(tempBitmap, 0, 0, newWidth, newHeight);
+                    return LoadImageData(resizedBitmap);
+                }
+            }
+        }
+
         private void PerformOperation(string operationName, Func<byte, byte, byte> pixelOperation)
         {
             if (!PrepareImagesForOperation(out ImageData img1, out ImageData img2, out int width, out int height))
@@ -540,14 +520,9 @@ namespace ImgApp_2_WinForms
                     {
                         int offset = rowOffset + (x * 4);
 
-                        // Применение операции к каждому каналу
-                        // B
                         dataResult[offset] = pixelOperation(data1[offset], data2[offset]);
-                        // G
                         dataResult[offset + 1] = pixelOperation(data1[offset + 1], data2[offset + 1]);
-                        // R
                         dataResult[offset + 2] = pixelOperation(data1[offset + 2], data2[offset + 2]);
-                        // A - уже установлен в 255
 
                         processedPixels++;
 
@@ -558,9 +533,9 @@ namespace ImgApp_2_WinForms
 
                 for (int i = 0; i < dataResult.Length; i += 4)
                 {
-                    if (!selectedChannels[2]) dataResult[i + 2] = 0; // R
-                    if (!selectedChannels[1]) dataResult[i + 1] = 0; // G
-                    if (!selectedChannels[0]) dataResult[i] = 0;     // B
+                    if (!selectedChannels[2]) dataResult[i + 2] = 0;
+                    if (!selectedChannels[1]) dataResult[i + 1] = 0;
+                    if (!selectedChannels[0]) dataResult[i] = 0;
                 }
 
                 UpdateProgress(totalPixels, totalPixels, operationName);
@@ -585,40 +560,14 @@ namespace ImgApp_2_WinForms
             }
         }
 
-        // Операция суммирования
-        private void PerformSum()
-        {
-            PerformOperation("Суммирование", (a, b) => (byte)Math.Min(255, a + b));
-        }
+        private void PerformSum() => PerformOperation("Суммирование", (a, b) => (byte)Math.Min(255, a + b));
+        private void PerformAverage() => PerformOperation("Усреднение", (a, b) => (byte)((a + b) / 2));
+        private void PerformMax() => PerformOperation("Поиск максимума", (a, b) => (byte)Math.Max(a, b));
+        private void PerformMin() => PerformOperation("Поиск минимума", (a, b) => (byte)Math.Min(a, b));
+        private void PerformProduct() => PerformOperation("Произведение", (a, b) => (byte)((a * b) / 255));
 
-        // Операция усреднения
-        private void PerformAverage()
-        {
-            PerformOperation("Усреднение", (a, b) => (byte)((a + b) / 2));
-        }
-
-        // Операция максимума
-        private void PerformMax()
-        {
-            PerformOperation("Поиск максимума", (a, b) => (byte)Math.Max(a, b));
-        }
-
-        // Операция минимума
-        private void PerformMin()
-        {
-            PerformOperation("Поиск минимума", (a, b) => (byte)Math.Min(a, b));
-        }
-
-        // Операция произведения (a * b / 255)
-        private void PerformProduct()
-        {
-            PerformOperation("Произведение", (a, b) => (byte)((a * b) / 255));
-        }
-
-        // Наложение маски
         private void PerformMask()
         {
-            // Используем преобразованную копию, если она есть
             var img = image1Copy ?? image1;
 
             if (img == null || img.Width == 0 || img.Height == 0)
@@ -653,7 +602,6 @@ namespace ImgApp_2_WinForms
                 byte[] imgBytes = imgData.Data;
                 byte[] resultBytes = result.Data;
 
-                // Создание маски
                 for (int y = 0; y < height; y++)
                 {
                     int rowOffset = y * stride;
@@ -670,12 +618,10 @@ namespace ImgApp_2_WinForms
                                 double dy = y - centerY;
                                 inMask = (dx * dx + dy * dy) <= (radius * radius);
                                 break;
-
                             case "Квадрат":
                                 inMask = (Math.Abs(x - centerX) <= mWidth / 2) &&
                                          (Math.Abs(y - centerY) <= mWidth / 2);
                                 break;
-
                             case "Прямоугольник":
                                 inMask = (Math.Abs(x - centerX) <= mWidth / 2) &&
                                          (Math.Abs(y - centerY) <= mHeight / 2);
@@ -683,17 +629,16 @@ namespace ImgApp_2_WinForms
                         }
 
                         byte maskValue = (byte)(inMask ? 255 : 0);
-                        maskBytes[offset] = maskValue;     // B
-                        maskBytes[offset + 1] = maskValue; // G
-                        maskBytes[offset + 2] = maskValue; // R
-                        maskBytes[offset + 3] = 255;       // A
+                        maskBytes[offset] = maskValue;
+                        maskBytes[offset + 1] = maskValue;
+                        maskBytes[offset + 2] = maskValue;
+                        maskBytes[offset + 3] = 255;
                     }
                 }
 
                 int totalPixels = width * height;
                 int processedPixels = 0;
 
-                // Применение маски
                 for (int y = 0; y < height; y++)
                 {
                     int rowOffset = y * stride;
@@ -702,10 +647,10 @@ namespace ImgApp_2_WinForms
                         int offset = rowOffset + (x * 4);
                         bool inMask = maskBytes[offset] == 255;
 
-                        resultBytes[offset] = inMask ? imgBytes[offset] : (byte)0;         // B
-                        resultBytes[offset + 1] = inMask ? imgBytes[offset + 1] : (byte)0; // G
-                        resultBytes[offset + 2] = inMask ? imgBytes[offset + 2] : (byte)0; // R
-                        resultBytes[offset + 3] = 255;                                     // A
+                        resultBytes[offset] = inMask ? imgBytes[offset] : (byte)0;
+                        resultBytes[offset + 1] = inMask ? imgBytes[offset + 1] : (byte)0;
+                        resultBytes[offset + 2] = inMask ? imgBytes[offset + 2] : (byte)0;
+                        resultBytes[offset + 3] = 255;
 
                         processedPixels++;
                         if (processedPixels % 5000 == 0)
@@ -713,12 +658,11 @@ namespace ImgApp_2_WinForms
                     }
                 }
 
-                // Применяем фильтр каналов к результату
                 for (int i = 0; i < resultBytes.Length; i += 4)
                 {
-                    if (!selectedChannels[2]) resultBytes[i + 2] = 0; // R
-                    if (!selectedChannels[1]) resultBytes[i + 1] = 0; // G
-                    if (!selectedChannels[0]) resultBytes[i] = 0;     // B
+                    if (!selectedChannels[2]) resultBytes[i + 2] = 0;
+                    if (!selectedChannels[1]) resultBytes[i + 1] = 0;
+                    if (!selectedChannels[0]) resultBytes[i] = 0;
                 }
 
                 UpdateProgress(totalPixels, totalPixels, "Наложение маски");
@@ -761,15 +705,15 @@ namespace ImgApp_2_WinForms
             }
         }
 
-        private System.Drawing.Imaging.ImageFormat GetImageFormat(string filePath)
+        private ImageFormat GetImageFormat(string filePath)
         {
             string ext = Path.GetExtension(filePath).ToLower();
             return ext switch
             {
-                ".png" => System.Drawing.Imaging.ImageFormat.Png,
-                ".bmp" => System.Drawing.Imaging.ImageFormat.Bmp,
-                ".gif" => System.Drawing.Imaging.ImageFormat.Gif,
-                _ => System.Drawing.Imaging.ImageFormat.Jpeg
+                ".png" => ImageFormat.Png,
+                ".bmp" => ImageFormat.Bmp,
+                ".gif" => ImageFormat.Gif,
+                _ => ImageFormat.Jpeg
             };
         }
 
@@ -957,21 +901,19 @@ namespace ImgApp_2_WinForms
 
         private void btnSumSelected(object sender, EventArgs e)
         {
-            // Сбрасываем состояние бинаризации
-            // Очищаем резервные копии
             if (binarizationBackup1 != null) { binarizationBackup1.Dispose(); binarizationBackup1 = null; }
             if (binarizationBackup2 != null) { binarizationBackup2.Dispose(); binarizationBackup2 = null; }
 
             groupBoxBinarizationImage.Visible = false;
+            groupBoxFilterCommon.Visible = false;
             selectedBinarizationMethod = null;
             selectedBinarizationImage = null;
+            selectedFilterMethod = null;
+            currentFilterType = null;
             comboBinarizationImage.SelectedIndex = -1;
             lblSelectedBinarizationMethod.Text = "Метод не выбран";
-            lblSelectedBinarizationMethod.ForeColor = System.Drawing.Color.Gray;
             btnApplyToView.Enabled = false;
             btnApplyBinarization.Enabled = false;
-            btnApplyToView.BackColor = System.Drawing.Color.LightGray;
-            btnApplyBinarization.BackColor = System.Drawing.Color.LightGray;
             selectedOperation = "Суммирование";
             defaultFileName = "sum.jpg";
             selectedOperationAction = PerformSum;
@@ -981,21 +923,19 @@ namespace ImgApp_2_WinForms
 
         private void btnAverageSelected(object sender, EventArgs e)
         {
-            // Сбрасываем состояние бинаризации
-            // Очищаем резервные копии
             if (binarizationBackup1 != null) { binarizationBackup1.Dispose(); binarizationBackup1 = null; }
             if (binarizationBackup2 != null) { binarizationBackup2.Dispose(); binarizationBackup2 = null; }
 
             groupBoxBinarizationImage.Visible = false;
+            groupBoxFilterCommon.Visible = false;
             selectedBinarizationMethod = null;
             selectedBinarizationImage = null;
+            selectedFilterMethod = null;
+            currentFilterType = null;
             comboBinarizationImage.SelectedIndex = -1;
             lblSelectedBinarizationMethod.Text = "Метод не выбран";
-            lblSelectedBinarizationMethod.ForeColor = System.Drawing.Color.Gray;
             btnApplyToView.Enabled = false;
             btnApplyBinarization.Enabled = false;
-            btnApplyToView.BackColor = System.Drawing.Color.LightGray;
-            btnApplyBinarization.BackColor = System.Drawing.Color.LightGray;
             selectedOperation = "Среднее арифметическое";
             defaultFileName = "average.jpg";
             selectedOperationAction = PerformAverage;
@@ -1005,21 +945,19 @@ namespace ImgApp_2_WinForms
 
         private void btnMaxSelected(object sender, EventArgs e)
         {
-            // Сбрасываем состояние бинаризации
-            // Очищаем резервные копии
             if (binarizationBackup1 != null) { binarizationBackup1.Dispose(); binarizationBackup1 = null; }
             if (binarizationBackup2 != null) { binarizationBackup2.Dispose(); binarizationBackup2 = null; }
 
             groupBoxBinarizationImage.Visible = false;
+            groupBoxFilterCommon.Visible = false;
             selectedBinarizationMethod = null;
             selectedBinarizationImage = null;
+            selectedFilterMethod = null;
+            currentFilterType = null;
             comboBinarizationImage.SelectedIndex = -1;
             lblSelectedBinarizationMethod.Text = "Метод не выбран";
-            lblSelectedBinarizationMethod.ForeColor = System.Drawing.Color.Gray;
             btnApplyToView.Enabled = false;
             btnApplyBinarization.Enabled = false;
-            btnApplyToView.BackColor = System.Drawing.Color.LightGray;
-            btnApplyBinarization.BackColor = System.Drawing.Color.LightGray;
             selectedOperation = "Попиксельный максимум";
             defaultFileName = "max.jpg";
             selectedOperationAction = PerformMax;
@@ -1029,21 +967,19 @@ namespace ImgApp_2_WinForms
 
         private void btnMinSelected(object sender, EventArgs e)
         {
-            // Сбрасываем состояние бинаризации
-            // Очищаем резервные копии
             if (binarizationBackup1 != null) { binarizationBackup1.Dispose(); binarizationBackup1 = null; }
             if (binarizationBackup2 != null) { binarizationBackup2.Dispose(); binarizationBackup2 = null; }
 
             groupBoxBinarizationImage.Visible = false;
+            groupBoxFilterCommon.Visible = false;
             selectedBinarizationMethod = null;
             selectedBinarizationImage = null;
+            selectedFilterMethod = null;
+            currentFilterType = null;
             comboBinarizationImage.SelectedIndex = -1;
             lblSelectedBinarizationMethod.Text = "Метод не выбран";
-            lblSelectedBinarizationMethod.ForeColor = System.Drawing.Color.Gray;
             btnApplyToView.Enabled = false;
             btnApplyBinarization.Enabled = false;
-            btnApplyToView.BackColor = System.Drawing.Color.LightGray;
-            btnApplyBinarization.BackColor = System.Drawing.Color.LightGray;
             selectedOperation = "Попиксельный минимум";
             defaultFileName = "min.jpg";
             selectedOperationAction = PerformMin;
@@ -1053,21 +989,19 @@ namespace ImgApp_2_WinForms
 
         private void btnProductSelected(object sender, EventArgs e)
         {
-            // Сбрасываем состояние бинаризации
-            // Очищаем резервные копии
             if (binarizationBackup1 != null) { binarizationBackup1.Dispose(); binarizationBackup1 = null; }
             if (binarizationBackup2 != null) { binarizationBackup2.Dispose(); binarizationBackup2 = null; }
 
             groupBoxBinarizationImage.Visible = false;
+            groupBoxFilterCommon.Visible = false;
             selectedBinarizationMethod = null;
             selectedBinarizationImage = null;
+            selectedFilterMethod = null;
+            currentFilterType = null;
             comboBinarizationImage.SelectedIndex = -1;
             lblSelectedBinarizationMethod.Text = "Метод не выбран";
-            lblSelectedBinarizationMethod.ForeColor = System.Drawing.Color.Gray;
             btnApplyToView.Enabled = false;
             btnApplyBinarization.Enabled = false;
-            btnApplyToView.BackColor = System.Drawing.Color.LightGray;
-            btnApplyBinarization.BackColor = System.Drawing.Color.LightGray;
             selectedOperation = "Произведение";
             defaultFileName = "product.jpg";
             selectedOperationAction = PerformProduct;
@@ -1077,21 +1011,19 @@ namespace ImgApp_2_WinForms
 
         private void btnMaskSelected(object sender, EventArgs e)
         {
-            // Сбрасываем состояние бинаризации
-            // Очищаем резервные копии
             if (binarizationBackup1 != null) { binarizationBackup1.Dispose(); binarizationBackup1 = null; }
             if (binarizationBackup2 != null) { binarizationBackup2.Dispose(); binarizationBackup2 = null; }
 
             groupBoxBinarizationImage.Visible = false;
+            groupBoxFilterCommon.Visible = false;
             selectedBinarizationMethod = null;
             selectedBinarizationImage = null;
+            selectedFilterMethod = null;
+            currentFilterType = null;
             comboBinarizationImage.SelectedIndex = -1;
             lblSelectedBinarizationMethod.Text = "Метод не выбран";
-            lblSelectedBinarizationMethod.ForeColor = System.Drawing.Color.Gray;
             btnApplyToView.Enabled = false;
             btnApplyBinarization.Enabled = false;
-            btnApplyToView.BackColor = System.Drawing.Color.LightGray;
-            btnApplyBinarization.BackColor = System.Drawing.Color.LightGray;
             selectedOperation = "Наложение маски";
             defaultFileName = "masked.jpg";
             selectedOperationAction = PerformMask;
@@ -1186,37 +1118,16 @@ namespace ImgApp_2_WinForms
             btnStart.Location = new Point(margin + leftPanelShift, bottomY + bottomPanelHeight + 10);
             btnStart.Size = new Size(138, 40);
 
-            // Группа бинаризации (увеличенная длина для двух кнопок)
             groupBoxBinarizationImage.Location = new Point(btnStart.Right + 20, btnStart.Top);
             groupBoxBinarizationImage.Size = new Size(540, 50);
 
-            // Обновляем позиции элементов внутри groupBoxBinarizationImage
-            if (comboBinarizationImage != null)
-            {
-                comboBinarizationImage.Location = new Point(10, 20);
-                comboBinarizationImage.Size = new Size(130, 24);
-
-                lblSelectedBinarizationMethod.Location = new Point(150, 23);
-                lblSelectedBinarizationMethod.Size = new Size(110, 17);
-
-                btnApplyToView.Location = new Point(280, 17);
-                btnApplyToView.Size = new Size(85, 25);
-
-                btnApplyBinarization.Location = new Point(370, 17);
-                btnApplyBinarization.Size = new Size(85, 25);
-
-                btnCancelBinarization.Location = new Point(460, 17);
-                btnCancelBinarization.Size = new Size(70, 25);
-            }
+            groupBoxFilterCommon.Location = new Point(btnStart.Right + 20, btnStart.Top);
+            groupBoxFilterCommon.Size = new Size(560, 70);
         }
 
         private void pictureBox2_Click(object sender, EventArgs e) { }
 
-        private void fileToolStripMenuItem_Click(object sender, EventArgs e) { }
-
-        private void operationsToolStripMenuItem_Click(object sender, EventArgs e) { }
-
-        // Методы бинаризации
+        // МЕТОДЫ БИНАРИЗАЦИИ
         private Bitmap PerformBinarization(Bitmap sourceImage, string method)
         {
             if (sourceImage == null || sourceImage.Width == 0 || sourceImage.Height == 0)
@@ -1255,12 +1166,10 @@ namespace ImgApp_2_WinForms
             if (menuItem != null)
             {
                 selectedBinarizationMethod = menuItem.Text;
+                groupBoxFilterCommon.Visible = false;
                 groupBoxBinarizationImage.Visible = true;
-
-                // Обновляем отображение выбранного метода
                 lblSelectedBinarizationMethod.Text = selectedBinarizationMethod;
                 lblSelectedBinarizationMethod.ForeColor = System.Drawing.Color.Black;
-
                 UpdateApplyButtonState();
             }
         }
@@ -1293,18 +1202,15 @@ namespace ImgApp_2_WinForms
             btnApplyToView.Enabled = methodSelected && imageValid;
             btnApplyBinarization.Enabled = methodSelected && imageValid;
 
-            // Устанавливаем стиль для неактивных кнопок
             foreach (var btn in new[] { btnApplyToView, btnApplyBinarization })
             {
                 if (!btn.Enabled)
                 {
                     btn.BackColor = System.Drawing.Color.LightGray;
-                    btn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
                 }
                 else
                 {
                     btn.BackColor = System.Drawing.SystemColors.Control;
-                    btn.FlatStyle = System.Windows.Forms.FlatStyle.Standard;
                 }
             }
         }
@@ -1328,7 +1234,6 @@ namespace ImgApp_2_WinForms
             {
                 ShowProgress($"Бинаризация ({selectedBinarizationMethod})");
 
-                // Сохраняем резервную копию перед изменением
                 if (selectedBinarizationImage == 1)
                 {
                     if (binarizationBackup1 != null) binarizationBackup1.Dispose();
@@ -1346,7 +1251,6 @@ namespace ImgApp_2_WinForms
 
                 if (result != null)
                 {
-                    // Применяем результат к выбранному изображению
                     if (selectedBinarizationImage == 1)
                     {
                         if (image1Copy != null) image1Copy.Dispose();
@@ -1396,7 +1300,6 @@ namespace ImgApp_2_WinForms
 
                 if (result != null)
                 {
-                    // Формируем имя файла из названия метода
                     string methodShortName = selectedBinarizationMethod
                         .Replace("Метод ", "")
                         .Replace(" ", "_")
@@ -1416,7 +1319,6 @@ namespace ImgApp_2_WinForms
 
         private void BtnCancelBinarization_Click(object sender, EventArgs e)
         {
-            // Восстанавливаем изображения из резервных копий
             if (binarizationBackup1 != null && selectedBinarizationImage == 1)
             {
                 if (image1Copy != null) image1Copy.Dispose();
@@ -1437,24 +1339,20 @@ namespace ImgApp_2_WinForms
                 UpdateHistogramForSelectedImage();
             }
 
-            // Скрываем панель бинаризации
             groupBoxBinarizationImage.Visible = false;
 
-            // Сбрасываем выбранный метод и изображение
             selectedBinarizationMethod = null;
             selectedBinarizationImage = null;
             comboBinarizationImage.SelectedIndex = -1;
             lblSelectedBinarizationMethod.Text = "Метод не выбран";
             lblSelectedBinarizationMethod.ForeColor = System.Drawing.Color.Gray;
 
-            // Деактивируем кнопки
             btnApplyToView.Enabled = false;
             btnApplyBinarization.Enabled = false;
             btnApplyToView.BackColor = System.Drawing.Color.LightGray;
             btnApplyBinarization.BackColor = System.Drawing.Color.LightGray;
         }
 
-        // Преобразование в градации серого
         private byte[] ConvertToGrayscale(ImageData data)
         {
             byte[] gray = new byte[data.Width * data.Height];
@@ -1467,7 +1365,6 @@ namespace ImgApp_2_WinForms
                 for (int x = 0; x < data.Width; x++)
                 {
                     int offset = rowOffset + x * 4;
-                    // I = 0.2125R + 0.7154G + 0.0721B
                     byte r = data.Data[offset + 2];
                     byte g = data.Data[offset + 1];
                     byte b = data.Data[offset];
@@ -1478,7 +1375,6 @@ namespace ImgApp_2_WinForms
             return gray;
         }
 
-        // Создание бинарного изображения из массива
         private Bitmap CreateBinaryBitmap(byte[] binary, int width, int height)
         {
             Bitmap result = new Bitmap(width, height, PixelFormat.Format32bppArgb);
@@ -1498,10 +1394,10 @@ namespace ImgApp_2_WinForms
                 {
                     int offset = rowOffset + x * 4;
                     byte value = binary[binOffset + x];
-                    resultData[offset] = value;     // B
-                    resultData[offset + 1] = value; // G
-                    resultData[offset + 2] = value; // R
-                    resultData[offset + 3] = 255;   // A
+                    resultData[offset] = value;
+                    resultData[offset + 1] = value;
+                    resultData[offset + 2] = value;
+                    resultData[offset + 3] = 255;
                 }
             });
 
@@ -1511,13 +1407,11 @@ namespace ImgApp_2_WinForms
             return result;
         }
 
-        // 1. Метод Гаврилова
         private Bitmap BinarizeGavrilov(Bitmap image)
         {
             ImageData data = LoadImageData(image);
             byte[] gray = ConvertToGrayscale(data);
 
-            // Вычисляем среднее арифметическое
             long sum = 0;
             for (int i = 0; i < gray.Length; i++)
                 sum += gray[i];
@@ -1534,29 +1428,24 @@ namespace ImgApp_2_WinForms
             return CreateBinaryBitmap(binary, data.Width, data.Height);
         }
 
-        // 2. Метод Отсу
         private Bitmap BinarizeOtsu(Bitmap image)
         {
             ImageData data = LoadImageData(image);
             byte[] gray = ConvertToGrayscale(data);
 
-            // Вычисляем гистограмму
             int[] histogram = new int[256];
             for (int i = 0; i < gray.Length; i++)
                 histogram[gray[i]]++;
 
-            // Нормированная гистограмма
             double[] normHist = new double[256];
             double totalPixels = gray.Length;
             for (int i = 0; i < 256; i++)
                 normHist[i] = histogram[i] / totalPixels;
 
-            // Вычисляем глобальное среднее
             double globalMean = 0;
             for (int i = 0; i < 256; i++)
                 globalMean += i * normHist[i];
 
-            // Ищем оптимальный порог
             double maxVariance = 0;
             byte threshold = 128;
             double omega1 = 0;
@@ -1592,7 +1481,6 @@ namespace ImgApp_2_WinForms
             return CreateBinaryBitmap(binary, data.Width, data.Height);
         }
 
-        // 3. Метод Ниблека
         private Bitmap BinarizeNiblack(Bitmap image)
         {
             ImageData data = LoadImageData(image);
@@ -1607,7 +1495,6 @@ namespace ImgApp_2_WinForms
             {
                 for (int x = 0; x < width; x++)
                 {
-                    // Вычисляем статистики в окне
                     int count = 0;
                     long sum = 0;
                     long sumSq = 0;
@@ -1644,7 +1531,6 @@ namespace ImgApp_2_WinForms
             return CreateBinaryBitmap(binary, width, height);
         }
 
-        // 4. Метод Сауволы
         private Bitmap BinarizeSauvola(Bitmap image)
         {
             ImageData data = LoadImageData(image);
@@ -1696,7 +1582,6 @@ namespace ImgApp_2_WinForms
             return CreateBinaryBitmap(binary, width, height);
         }
 
-        // 5. Метод Вульфа
         private Bitmap BinarizeWolf(Bitmap image)
         {
             ImageData data = LoadImageData(image);
@@ -1706,12 +1591,10 @@ namespace ImgApp_2_WinForms
             int halfWindow = WINDOW_SIZE / 2;
             const double a = 0.5;
 
-            // Находим минимум изображения
             byte minVal = 255;
             for (int i = 0; i < gray.Length; i++)
                 if (gray[i] < minVal) minVal = gray[i];
 
-            // Первый проход: вычисляем средние и стандартные отклонения
             double[] means = new double[gray.Length];
             double[] stdDevs = new double[gray.Length];
             double maxStdDev = 0;
@@ -1756,7 +1639,6 @@ namespace ImgApp_2_WinForms
                 }
             });
 
-            // Второй проход: вычисляем пороги и бинаризуем
             byte[] binary = new byte[gray.Length];
             double R = maxStdDev > 0 ? maxStdDev : 128.0;
 
@@ -1771,7 +1653,6 @@ namespace ImgApp_2_WinForms
             return CreateBinaryBitmap(binary, width, height);
         }
 
-        // 6. Метод Брэдли-Рота (с использованием интегрального изображения)
         private Bitmap BinarizeBradleyRoth(Bitmap image)
         {
             ImageData data = LoadImageData(image);
@@ -1781,7 +1662,6 @@ namespace ImgApp_2_WinForms
             int windowSize = WINDOW_SIZE;
             int halfWindow = windowSize / 2;
 
-            // Вычисляем интегральное изображение
             long[] integral = new long[width * height];
 
             for (int y = 0; y < height; y++)
@@ -1805,13 +1685,11 @@ namespace ImgApp_2_WinForms
             {
                 for (int x = 0; x < width; x++)
                 {
-                    // Определяем границы окна
                     int x1 = Math.Max(0, x - halfWindow);
                     int y1 = Math.Max(0, y - halfWindow);
                     int x2 = Math.Min(width - 1, x + halfWindow);
                     int y2 = Math.Min(height - 1, y + halfWindow);
 
-                    // Вычисляем сумму в окне через интегральное изображение
                     long sum = integral[y2 * width + x2];
 
                     if (x1 > 0)
@@ -1834,9 +1712,586 @@ namespace ImgApp_2_WinForms
             data.Dispose();
             return CreateBinaryBitmap(binary, width, height);
         }
+
+        // МЕТОДЫ ФИЛЬТРАЦИИ (ЕДИНОЕ ОКНО)
+        private void FilterTypeSelected(object sender, EventArgs e)
+        {
+            var menuItem = sender as ToolStripMenuItem;
+            if (menuItem == null) return;
+
+            groupBoxBinarizationImage.Visible = false;
+
+            selectedBinarizationMethod = null;
+            selectedBinarizationImage = null;
+            comboBinarizationImage.SelectedIndex = -1;
+            lblSelectedBinarizationMethod.Text = "Метод не выбран";
+            btnApplyToView.Enabled = false;
+            btnApplyBinarization.Enabled = false;
+
+            groupBoxFilterCommon.Visible = true;
+
+            if (menuItem == linearFilterToolStripMenuItem)
+            {
+                currentFilterType = "linear";
+                selectedFilterMethod = "Линейная фильтрация";
+                lblFilterMethod.Text = "Линейная фильтрация";
+                lblFilterMethod.ForeColor = System.Drawing.Color.Black;
+                groupBoxFilterCommon.Text = "Изображение для фильтрации (Линейная)";
+
+                lblFilterParam1.Text = "W:";
+                lblFilterParam2.Text = "H:";
+                lblFilterParam1.Visible = true;
+                nudFilterParam1.Visible = true;
+                lblFilterParam2.Visible = true;
+                nudFilterParam2.Visible = true;
+                nudFilterParam1.Minimum = 1;
+                nudFilterParam1.Maximum = 15;
+                nudFilterParam1.Value = 3;
+                nudFilterParam2.Minimum = 1;
+                nudFilterParam2.Maximum = 15;
+                nudFilterParam2.Value = 3;
+                nudFilterParam1.DecimalPlaces = 0;
+            }
+            else if (menuItem == medianFilterToolStripMenuItem)
+            {
+                currentFilterType = "median";
+                selectedFilterMethod = "Медианная фильтрация";
+                lblFilterMethod.Text = "Медианная фильтрация";
+                lblFilterMethod.ForeColor = System.Drawing.Color.Black;
+                groupBoxFilterCommon.Text = "Изображение для фильтрации (Медианная)";
+
+                lblFilterParam1.Text = "Окно:";
+                lblFilterParam2.Visible = false;
+                nudFilterParam2.Visible = false;
+                lblFilterParam1.Visible = true;
+                nudFilterParam1.Visible = true;
+                nudFilterParam1.Minimum = 3;
+                nudFilterParam1.Maximum = 15;
+                nudFilterParam1.Value = 3;
+                nudFilterParam1.DecimalPlaces = 0;
+            }
+            else if (menuItem == gaussianFilterToolStripMenuItem)
+            {
+                currentFilterType = "gaussian";
+                selectedFilterMethod = "Размытие по Гауссу";
+                lblFilterMethod.Text = "Размытие по Гауссу";
+                lblFilterMethod.ForeColor = System.Drawing.Color.Black;
+                groupBoxFilterCommon.Text = "Изображение для фильтрации (Гаусс)";
+
+                lblFilterParam1.Text = "σ:";
+                lblFilterParam2.Visible = false;
+                nudFilterParam2.Visible = false;
+                lblFilterParam1.Visible = true;
+                nudFilterParam1.Visible = true;
+                nudFilterParam1.Minimum = 1;
+                nudFilterParam1.Maximum = 50;
+                nudFilterParam1.Value = 3;
+                nudFilterParam1.DecimalPlaces = 1;
+            }
+
+            btnFilterApply.Enabled = true;
+            btnFilterSave.Enabled = true;
+            btnFilterApply.BackColor = System.Drawing.SystemColors.Control;
+            btnFilterSave.BackColor = System.Drawing.SystemColors.Control;
+
+            if (comboFilterImage.SelectedIndex == -1)
+                comboFilterImage.SelectedIndex = 0;
+        }
+
+        private void ComboFilterImage_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateFilterButtonState();
+        }
+
+        private void UpdateFilterButtonState()
+        {
+            bool methodSelected = !string.IsNullOrEmpty(selectedFilterMethod);
+            bool imageSelected = comboFilterImage.SelectedIndex != -1;
+            bool imageValid = false;
+
+            if (imageSelected)
+            {
+                var img = comboFilterImage.SelectedIndex == 0 ?
+                    (image1Copy ?? image1) : (image2Copy ?? image2);
+                imageValid = img != null && img.Width > 0 && img.Height > 0;
+            }
+
+            btnFilterApply.Enabled = methodSelected && imageValid;
+            btnFilterSave.Enabled = methodSelected && imageValid;
+
+            foreach (var btn in new[] { btnFilterApply, btnFilterSave })
+            {
+                if (!btn.Enabled)
+                {
+                    btn.BackColor = System.Drawing.Color.LightGray;
+                }
+                else
+                {
+                    btn.BackColor = System.Drawing.SystemColors.Control;
+                }
+            }
+        }
+
+        private void BtnFilterApply_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(currentFilterType) || comboFilterImage.SelectedIndex == -1)
+                return;
+
+            var img = comboFilterImage.SelectedIndex == 0 ?
+                (image1Copy ?? image1) : (image2Copy ?? image2);
+
+            if (img == null || img.Width == 0)
+            {
+                MessageBox.Show("Изображение не загружено!", "Ошибка",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                ShowProgress($"Фильтрация ({selectedFilterMethod})");
+
+                Bitmap result = null;
+
+                if (currentFilterType == "linear")
+                {
+                    int kw = (int)nudFilterParam1.Value;
+                    int kh = (int)nudFilterParam2.Value;
+                    if (kw % 2 == 0) kw++;
+                    if (kh % 2 == 0) kh++;
+
+                    double[,] kernel = new double[kh, kw];
+                    double val = 1.0 / (kw * kh);
+                    for (int y = 0; y < kh; y++)
+                        for (int x = 0; x < kw; x++)
+                            kernel[y, x] = val;
+
+                    result = SpatialFilter.LinearFilter(img, kernel);
+                }
+                else if (currentFilterType == "median")
+                {
+                    int windowSize = (int)nudFilterParam1.Value;
+                    if (windowSize % 2 == 0) windowSize++;
+                    result = SpatialFilter.MedianFilter(img, windowSize);
+                }
+                else if (currentFilterType == "gaussian")
+                {
+                    double sigma = (double)nudFilterParam1.Value;
+                    result = SpatialFilter.GaussianBlur(img, sigma);
+                }
+
+                HideProgress();
+
+                if (result != null)
+                {
+                    if (comboFilterImage.SelectedIndex == 0)
+                    {
+                        if (image1Copy != null) image1Copy.Dispose();
+                        image1Copy = result;
+                        pictureBox1.Image = image1Copy;
+                    }
+                    else
+                    {
+                        if (image2Copy != null) image2Copy.Dispose();
+                        image2Copy = result;
+                        pictureBox2.Image = image2Copy;
+                    }
+                    UpdateHistogramForSelectedImage();
+                }
+            }
+            catch (Exception ex)
+            {
+                HideProgress();
+                MessageBox.Show($"Ошибка при фильтрации: {ex.Message}", "Ошибка",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnFilterSave_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(currentFilterType) || comboFilterImage.SelectedIndex == -1)
+                return;
+
+            var img = comboFilterImage.SelectedIndex == 0 ?
+                (image1Copy ?? image1) : (image2Copy ?? image2);
+
+            if (img == null || img.Width == 0) return;
+
+            try
+            {
+                ShowProgress("Сохранение результата...");
+
+                Bitmap result = null;
+
+                if (currentFilterType == "linear")
+                {
+                    int kw = (int)nudFilterParam1.Value;
+                    int kh = (int)nudFilterParam2.Value;
+                    if (kw % 2 == 0) kw++;
+                    if (kh % 2 == 0) kh++;
+
+                    double[,] kernel = new double[kh, kw];
+                    double val = 1.0 / (kw * kh);
+                    for (int y = 0; y < kh; y++)
+                        for (int x = 0; x < kw; x++)
+                            kernel[y, x] = val;
+
+                    result = SpatialFilter.LinearFilter(img, kernel);
+                }
+                else if (currentFilterType == "median")
+                {
+                    int windowSize = (int)nudFilterParam1.Value;
+                    if (windowSize % 2 == 0) windowSize++;
+                    result = SpatialFilter.MedianFilter(img, windowSize);
+                }
+                else if (currentFilterType == "gaussian")
+                {
+                    double sigma = (double)nudFilterParam1.Value;
+                    result = SpatialFilter.GaussianBlur(img, sigma);
+                }
+
+                HideProgress();
+
+                if (result != null)
+                {
+                    string filterName = selectedFilterMethod.Replace(" ", "_").ToLower();
+                    SaveResultWithDialog(result, $"filtered_{filterName}.jpg");
+                    result.Dispose();
+                }
+            }
+            catch (Exception ex)
+            {
+                HideProgress();
+                MessageBox.Show($"Ошибка при сохранении: {ex.Message}", "Ошибка",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnFilterCancel_Click(object sender, EventArgs e)
+        {
+            groupBoxFilterCommon.Visible = false;
+
+            selectedFilterMethod = null;
+            currentFilterType = null;
+            lblFilterMethod.Text = "Метод не выбран";
+            lblFilterMethod.ForeColor = System.Drawing.Color.Gray;
+
+            comboFilterImage.SelectedIndex = -1;
+
+            btnFilterApply.Enabled = false;
+            btnFilterSave.Enabled = false;
+            btnFilterApply.BackColor = System.Drawing.Color.LightGray;
+            btnFilterSave.BackColor = System.Drawing.Color.LightGray;
+
+            lblFilterParam1.Visible = false;
+            nudFilterParam1.Visible = false;
+            lblFilterParam2.Visible = false;
+            nudFilterParam2.Visible = false;
+        }
+
+        private class ImageData : IDisposable
+        {
+            public int Width { get; set; }
+            public int Height { get; set; }
+            public byte[] Data { get; set; }
+            public int Stride { get; set; }
+
+            public void Dispose()
+            {
+                Data = null;
+            }
+        }
+
+        private void btnFilterApply_Click_1(object sender, EventArgs e)
+        {
+
+        }
     }
 
-    // ===Классы для кривой===
+    // Класс для пространственной фильтрации
+    public static class SpatialFilter
+    {
+        private class FilterImageData
+        {
+            public int Width;
+            public int Height;
+            public byte[] Data;
+            public int Stride;
+        }
+
+        private static byte QuickSelect(byte[] arr, int left, int right, int k)
+        {
+            while (left < right)
+            {
+                int mid = left + (right - left) / 2;
+                if (arr[mid] < arr[left]) (arr[left], arr[mid]) = (arr[mid], arr[left]);
+                if (arr[right] < arr[left]) (arr[left], arr[right]) = (arr[right], arr[left]);
+                if (arr[right] < arr[mid]) (arr[mid], arr[right]) = (arr[right], arr[mid]);
+
+                byte pivot = arr[mid];
+                (arr[mid], arr[right]) = (arr[right], arr[mid]);
+
+                int i = left;
+                for (int j = left; j < right; j++)
+                {
+                    if (arr[j] <= pivot)
+                    {
+                        (arr[i], arr[j]) = (arr[j], arr[i]);
+                        i++;
+                    }
+                }
+                (arr[i], arr[right]) = (arr[right], arr[i]);
+
+                if (k == i) return arr[k];
+                if (k < i) right = i - 1;
+                else left = i + 1;
+            }
+            return arr[left];
+        }
+
+        public static Bitmap LinearFilter(Bitmap image, double[,] kernel)
+        {
+            if (image == null || kernel == null) return null;
+
+            FilterImageData src = LockImage(image);
+            int w = src.Width, h = src.Height;
+            int kH = kernel.GetLength(0), kW = kernel.GetLength(1);
+            int kCX = kW / 2, kCY = kH / 2;
+
+            double[] kFlat = new double[kH * kW];
+            for (int ky = 0; ky < kH; ky++)
+                for (int kx = 0; kx < kW; kx++)
+                    kFlat[ky * kW + kx] = kernel[ky, kx];
+
+            byte[] output = new byte[src.Data.Length];
+
+            for (int i = 3; i < output.Length; i += 4)
+                output[i] = 255;
+
+            Parallel.For(0, h, y =>
+            {
+                int rowOff = y * src.Stride;
+                for (int x = 0; x < w; x++)
+                {
+                    double sumB = 0, sumG = 0, sumR = 0;
+                    int outOff = rowOff + x * 4;
+
+                    for (int ky = 0; ky < kH; ky++)
+                    {
+                        int py = MirrorCoord(y + ky - kCY, h);
+                        int srcRow = py * src.Stride;
+                        int kRow = ky * kW;
+
+                        for (int kx = 0; kx < kW; kx++)
+                        {
+                            int px = MirrorCoord(x + kx - kCX, w);
+                            int srcOff = srcRow + px * 4;
+                            double wt = kFlat[kRow + kx];
+                            sumB += src.Data[srcOff] * wt;
+                            sumG += src.Data[srcOff + 1] * wt;
+                            sumR += src.Data[srcOff + 2] * wt;
+                        }
+                    }
+
+                    output[outOff] = Clamp(sumB);
+                    output[outOff + 1] = Clamp(sumG);
+                    output[outOff + 2] = Clamp(sumR);
+                }
+            });
+
+            UnlockImage(image, src);
+            return CreateBitmap(w, h, output);
+        }
+
+        public static Bitmap MedianFilter(Bitmap image, int winSize)
+        {
+            if (image == null) return null;
+            if (winSize % 2 == 0) winSize++;
+
+            FilterImageData src = LockImage(image);
+            int w = src.Width, h = src.Height;
+            int half = winSize / 2;
+            int maxPixels = winSize * winSize;
+
+            byte[] output = new byte[src.Data.Length];
+            for (int i = 3; i < output.Length; i += 4)
+                output[i] = 255;
+
+            Parallel.For(0, h, y =>
+            {
+                byte[] rVals = new byte[maxPixels];
+                byte[] gVals = new byte[maxPixels];
+                byte[] bVals = new byte[maxPixels];
+
+                int rowOff = y * src.Stride;
+
+                for (int x = 0; x < w; x++)
+                {
+                    int count = 0;
+
+                    for (int wy = -half; wy <= half; wy++)
+                    {
+                        int py = MirrorCoord(y + wy, h);
+                        int srcRow = py * src.Stride;
+
+                        for (int wx = -half; wx <= half; wx++)
+                        {
+                            int px = MirrorCoord(x + wx, w);
+                            int srcOff = srcRow + px * 4;
+                            bVals[count] = src.Data[srcOff];
+                            gVals[count] = src.Data[srcOff + 1];
+                            rVals[count] = src.Data[srcOff + 2];
+                            count++;
+                        }
+                    }
+
+                    int medIdx = count / 2;
+                    int outOff = rowOff + x * 4;
+                    output[outOff] = QuickSelect(bVals, 0, count - 1, medIdx);
+                    output[outOff + 1] = QuickSelect(gVals, 0, count - 1, medIdx);
+                    output[outOff + 2] = QuickSelect(rVals, 0, count - 1, medIdx);
+                }
+            });
+
+            UnlockImage(image, src);
+            return CreateBitmap(w, h, output);
+        }
+
+        private static double[] CalculateGaussianKernel1D(double sigma, out int kernelSize)
+        {
+            int r = (int)Math.Ceiling(3 * sigma);
+            int size = 2 * r + 1;
+            kernelSize = size;
+
+            double[] kernel = new double[size];
+            double twoSigmaSq = 2.0 * sigma * sigma;
+            double norm = 1.0 / (Math.Sqrt(2 * Math.PI) * sigma);
+            double sum = 0;
+
+            for (int i = 0; i < size; i++)
+            {
+                int x = i - r;
+                double val = norm * Math.Exp(-(x * x) / twoSigmaSq);
+                kernel[i] = val;
+                sum += val;
+            }
+
+            double invSum = 1.0 / sum;
+            for (int i = 0; i < size; i++)
+                kernel[i] *= invSum;
+
+            return kernel;
+        }
+
+        private static Bitmap LinearFilterSeparable(Bitmap image, double[] kernel1D)
+        {
+            if (image == null || kernel1D == null) return null;
+
+            FilterImageData src = LockImage(image);
+            int w = src.Width, h = src.Height;
+            int kSize = kernel1D.Length;
+            int kCenter = kSize / 2;
+
+            byte[] temp = new byte[src.Data.Length];
+            for (int i = 3; i < temp.Length; i += 4)
+                temp[i] = 255;
+
+            Parallel.For(0, h, y =>
+            {
+                int rowOff = y * src.Stride;
+                for (int x = 0; x < w; x++)
+                {
+                    double sumB = 0, sumG = 0, sumR = 0;
+                    for (int kx = 0; kx < kSize; kx++)
+                    {
+                        int px = MirrorCoord(x + kx - kCenter, w);
+                        int srcOff = rowOff + px * 4;
+                        double wt = kernel1D[kx];
+                        sumB += src.Data[srcOff] * wt;
+                        sumG += src.Data[srcOff + 1] * wt;
+                        sumR += src.Data[srcOff + 2] * wt;
+                    }
+                    int outOff = rowOff + x * 4;
+                    temp[outOff] = Clamp(sumB);
+                    temp[outOff + 1] = Clamp(sumG);
+                    temp[outOff + 2] = Clamp(sumR);
+                }
+            });
+
+            byte[] output = new byte[src.Data.Length];
+            for (int i = 3; i < output.Length; i += 4)
+                output[i] = 255;
+
+            Parallel.For(0, h, y =>
+            {
+                int rowOff = y * src.Stride;
+                for (int x = 0; x < w; x++)
+                {
+                    double sumB = 0, sumG = 0, sumR = 0;
+                    for (int ky = 0; ky < kSize; ky++)
+                    {
+                        int py = MirrorCoord(y + ky - kCenter, h);
+                        int srcOff = py * src.Stride + x * 4;
+                        double wt = kernel1D[ky];
+                        sumB += temp[srcOff] * wt;
+                        sumG += temp[srcOff + 1] * wt;
+                        sumR += temp[srcOff + 2] * wt;
+                    }
+                    int outOff = rowOff + x * 4;
+                    output[outOff] = Clamp(sumB);
+                    output[outOff + 1] = Clamp(sumG);
+                    output[outOff + 2] = Clamp(sumR);
+                }
+            });
+
+            UnlockImage(image, src);
+            return CreateBitmap(w, h, output);
+        }
+
+        public static Bitmap GaussianBlur(Bitmap image, double sigma)
+        {
+            double[] kernel1D = CalculateGaussianKernel1D(sigma, out int kSize);
+            return LinearFilterSeparable(image, kernel1D);
+        }
+
+        private static int MirrorCoord(int coord, int max)
+        {
+            if (coord < 0) return -coord;
+            if (coord >= max) return 2 * max - coord - 2;
+            return coord;
+        }
+
+        private static byte Clamp(double val)
+        {
+            return val < 0 ? (byte)0 : val > 255 ? (byte)255 : (byte)val;
+        }
+
+        private static FilterImageData LockImage(Bitmap bmp)
+        {
+            var data = new FilterImageData { Width = bmp.Width, Height = bmp.Height };
+            BitmapData bd = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),
+                ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+            data.Stride = bd.Stride;
+            data.Data = new byte[bd.Stride * bmp.Height];
+            Marshal.Copy(bd.Scan0, data.Data, 0, data.Data.Length);
+            bmp.UnlockBits(bd);
+            return data;
+        }
+
+        private static void UnlockImage(Bitmap bmp, FilterImageData data) { }
+
+        private static Bitmap CreateBitmap(int w, int h, byte[] data)
+        {
+            Bitmap res = new Bitmap(w, h, PixelFormat.Format32bppArgb);
+            BitmapData bd = res.LockBits(new Rectangle(0, 0, w, h),
+                ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+            Marshal.Copy(data, 0, bd.Scan0, data.Length);
+            res.UnlockBits(bd);
+            return res;
+        }
+    }
+
+    // Интерфейсы и классы для кривой
     public interface IInterpolation
     {
         double f(double _x);
@@ -1850,7 +2305,6 @@ namespace ImgApp_2_WinForms
         public MyPoint(double x, double y) { X = x; Y = y; }
     }
 
-    // Линейная интерполяция с кэшированием
     public class LinearInterpolation : IInterpolation
     {
         private double[] x = new double[0];
@@ -1887,7 +2341,6 @@ namespace ImgApp_2_WinForms
         }
     }
 
-    // B-сплайн интерполяция (оптимизированная)
     public class BSplineInterpolation : IInterpolation
     {
         private List<MyPoint> controlPoints;
@@ -2026,7 +2479,6 @@ namespace ImgApp_2_WinForms
             this.Paint += OnPaint;
             this.Resize += (s, e) => { this.Invalidate(); };
 
-            // Кнопка сброса
             resetCurveButton = new Button
             {
                 Text = "Сбросить кривую",
@@ -2057,7 +2509,6 @@ namespace ImgApp_2_WinForms
         private void InitializeBSplineCurve()
         {
             points.Clear();
-            // 4 точки для B-сплайна и 2 точки для прямой
             points.Add(new MyPoint(0, 0));
             points.Add(new MyPoint(0, 0.3333));
             points.Add(new MyPoint(1, 0.6667));
@@ -2080,13 +2531,11 @@ namespace ImgApp_2_WinForms
             if (isBSpline)
             {
                 interpolation = new BSplineInterpolation();
-                // Установка 4 точек для прямой линии B-сплайна
                 InitializeBSplineCurve();
             }
             else
             {
                 interpolation = new LinearInterpolation();
-                // Установка 2 точек для прямой линии
                 InitializeLinearCurve();
             }
         }
@@ -2231,7 +2680,6 @@ namespace ImgApp_2_WinForms
             g.Clear(Color.White);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-            // Сетка
             for (int i = 0; i <= 4; i++)
             {
                 float x = i * w / 4f;
@@ -2240,7 +2688,6 @@ namespace ImgApp_2_WinForms
                 g.DrawLine(axisPen, 0, y, w, y);
             }
 
-            // Кривая
             if (points.Count >= 2)
             {
                 using (Pen curvePenSmooth = new Pen(Color.Blue, 2.5f))
@@ -2260,7 +2707,6 @@ namespace ImgApp_2_WinForms
                 }
             }
 
-            // Точки управления
             foreach (var p in points)
             {
                 PointF pt = ToPanelCoordinates(p);
@@ -2268,7 +2714,6 @@ namespace ImgApp_2_WinForms
                 g.DrawEllipse(Pens.DarkRed, pt.X - pointRadius, pt.Y - pointRadius, pointRadius * 2, pointRadius * 2);
             }
 
-            // Подписи координат
             try
             {
                 if (h > 25 && w > 40)

@@ -8,11 +8,9 @@
         private System.Windows.Forms.Button bOpen1;
         private System.Windows.Forms.Button bOpen2;
 
-        // Элементы меню:
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem operationsToolStripMenuItem;
 
-        // Пункты меню операций:
         private System.Windows.Forms.ToolStripMenuItem sumToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem averageToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem maxToolStripMenuItem;
@@ -20,7 +18,6 @@
         private System.Windows.Forms.ToolStripMenuItem productToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem maskToolStripMenuItem;
 
-        // Пункт меню для бинаризации
         private System.Windows.Forms.ToolStripMenuItem binarizationToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gavrilovToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem otsuToolStripMenuItem;
@@ -29,24 +26,30 @@
         private System.Windows.Forms.ToolStripMenuItem wolfToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem bradleyRothToolStripMenuItem;
 
-        // Элементы для выбора изображения для бинаризации
-        private System.Windows.Forms.GroupBox groupBoxBinarizationImage;
-        private System.Windows.Forms.ComboBox comboBinarizationImage;
-        private System.Windows.Forms.Label lblSelectedBinarizationMethod;
-        private System.Windows.Forms.Button btnApplyToView;
-        private System.Windows.Forms.Button btnApplyBinarization;
-        private System.Windows.Forms.Button btnCancelBinarization;
+        private System.Windows.Forms.ToolStripMenuItem filteringToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem linearFilterToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem medianFilterToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem gaussianFilterToolStripMenuItem;
 
-        // Элементы прогресса:
+        // Единое окно фильтрации
+        private System.Windows.Forms.GroupBox groupBoxFilterCommon;
+        private System.Windows.Forms.ComboBox comboFilterImage;
+        private System.Windows.Forms.Label lblFilterMethod;
+        private System.Windows.Forms.Label lblFilterParam1;
+        private System.Windows.Forms.NumericUpDown nudFilterParam1;
+        private System.Windows.Forms.Label lblFilterParam2;
+        private System.Windows.Forms.NumericUpDown nudFilterParam2;
+        private System.Windows.Forms.Button btnFilterApply;
+        private System.Windows.Forms.Button btnFilterSave;
+        private System.Windows.Forms.Button btnFilterCancel;
+
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Label progressLabel;
 
-        // Элементы для выбора операции:
         private System.Windows.Forms.GroupBox groupBoxSelectedOperation;
         private System.Windows.Forms.Label lblSelectedOperation;
         private System.Windows.Forms.Button btnStart;
 
-        // Элементы для маски:
         private System.Windows.Forms.GroupBox groupBoxMaskSettings;
         private System.Windows.Forms.RadioButton radioCircle;
         private System.Windows.Forms.RadioButton radioSquare;
@@ -56,7 +59,6 @@
         private System.Windows.Forms.NumericUpDown nudMaskWidth;
         private System.Windows.Forms.NumericUpDown nudMaskHeight;
 
-        // для выбора цветовых каналов
         private System.Windows.Forms.GroupBox groupBoxChannels;
         private System.Windows.Forms.CheckBox chkR;
         private System.Windows.Forms.CheckBox chkG;
@@ -65,6 +67,13 @@
         private System.Windows.Forms.RadioButton radioRG;
         private System.Windows.Forms.RadioButton radioRB;
         private System.Windows.Forms.RadioButton radioGB;
+
+        private System.Windows.Forms.GroupBox groupBoxBinarizationImage;
+        private System.Windows.Forms.ComboBox comboBinarizationImage;
+        private System.Windows.Forms.Label lblSelectedBinarizationMethod;
+        private System.Windows.Forms.Button btnApplyToView;
+        private System.Windows.Forms.Button btnApplyBinarization;
+        private System.Windows.Forms.Button btnCancelBinarization;
 
         protected override void Dispose(bool disposing)
         {
@@ -96,6 +105,10 @@
             this.sauvolaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.wolfToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bradleyRothToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.filteringToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.linearFilterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.medianFilterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gaussianFilterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.progressLabel = new System.Windows.Forms.Label();
             this.groupBoxSelectedOperation = new System.Windows.Forms.GroupBox();
@@ -120,7 +133,19 @@
             this.groupBoxBinarizationImage = new System.Windows.Forms.GroupBox();
             this.comboBinarizationImage = new System.Windows.Forms.ComboBox();
             this.lblSelectedBinarizationMethod = new System.Windows.Forms.Label();
+            this.btnApplyToView = new System.Windows.Forms.Button();
             this.btnApplyBinarization = new System.Windows.Forms.Button();
+            this.btnCancelBinarization = new System.Windows.Forms.Button();
+            this.groupBoxFilterCommon = new System.Windows.Forms.GroupBox();
+            this.comboFilterImage = new System.Windows.Forms.ComboBox();
+            this.lblFilterMethod = new System.Windows.Forms.Label();
+            this.lblFilterParam1 = new System.Windows.Forms.Label();
+            this.nudFilterParam1 = new System.Windows.Forms.NumericUpDown();
+            this.lblFilterParam2 = new System.Windows.Forms.Label();
+            this.nudFilterParam2 = new System.Windows.Forms.NumericUpDown();
+            this.btnFilterApply = new System.Windows.Forms.Button();
+            this.btnFilterSave = new System.Windows.Forms.Button();
+            this.btnFilterCancel = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.menuStrip1.SuspendLayout();
@@ -130,6 +155,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.nudMaskHeight)).BeginInit();
             this.groupBoxChannels.SuspendLayout();
             this.groupBoxBinarizationImage.SuspendLayout();
+            this.groupBoxFilterCommon.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudFilterParam1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudFilterParam2)).BeginInit();
             this.SuspendLayout();
             // 
             // pictureBox1
@@ -192,7 +220,8 @@
             this.menuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.operationsToolStripMenuItem,
-            this.binarizationToolStripMenuItem});
+            this.binarizationToolStripMenuItem,
+            this.filteringToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(1147, 28);
@@ -309,6 +338,37 @@
             this.bradleyRothToolStripMenuItem.Text = "Метод Брэдли-Рота";
             this.bradleyRothToolStripMenuItem.Click += new System.EventHandler(this.BinarizationMethodSelected);
             // 
+            // filteringToolStripMenuItem
+            // 
+            this.filteringToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.linearFilterToolStripMenuItem,
+            this.medianFilterToolStripMenuItem,
+            this.gaussianFilterToolStripMenuItem});
+            this.filteringToolStripMenuItem.Name = "filteringToolStripMenuItem";
+            this.filteringToolStripMenuItem.Size = new System.Drawing.Size(108, 24);
+            this.filteringToolStripMenuItem.Text = "Фильтрация";
+            // 
+            // linearFilterToolStripMenuItem
+            // 
+            this.linearFilterToolStripMenuItem.Name = "linearFilterToolStripMenuItem";
+            this.linearFilterToolStripMenuItem.Size = new System.Drawing.Size(260, 26);
+            this.linearFilterToolStripMenuItem.Text = "Линейная фильтр.";
+            this.linearFilterToolStripMenuItem.Click += new System.EventHandler(this.FilterTypeSelected);
+            // 
+            // medianFilterToolStripMenuItem
+            // 
+            this.medianFilterToolStripMenuItem.Name = "medianFilterToolStripMenuItem";
+            this.medianFilterToolStripMenuItem.Size = new System.Drawing.Size(260, 26);
+            this.medianFilterToolStripMenuItem.Text = "Медианная фильтрация";
+            this.medianFilterToolStripMenuItem.Click += new System.EventHandler(this.FilterTypeSelected);
+            // 
+            // gaussianFilterToolStripMenuItem
+            // 
+            this.gaussianFilterToolStripMenuItem.Name = "gaussianFilterToolStripMenuItem";
+            this.gaussianFilterToolStripMenuItem.Size = new System.Drawing.Size(260, 26);
+            this.gaussianFilterToolStripMenuItem.Text = "Размытие по Гауссу";
+            this.gaussianFilterToolStripMenuItem.Click += new System.EventHandler(this.FilterTypeSelected);
+            // 
             // progressBar1
             // 
             this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
@@ -388,7 +448,7 @@
             this.radioCircle.AutoSize = true;
             this.radioCircle.Location = new System.Drawing.Point(6, 15);
             this.radioCircle.Name = "radioCircle";
-            this.radioCircle.Size = new System.Drawing.Size(52, 17);
+            this.radioCircle.Size = new System.Drawing.Size(58, 20);
             this.radioCircle.TabIndex = 0;
             this.radioCircle.TabStop = true;
             this.radioCircle.Text = "Круг";
@@ -400,7 +460,7 @@
             this.radioSquare.AutoSize = true;
             this.radioSquare.Location = new System.Drawing.Point(60, 15);
             this.radioSquare.Name = "radioSquare";
-            this.radioSquare.Size = new System.Drawing.Size(64, 17);
+            this.radioSquare.Size = new System.Drawing.Size(83, 20);
             this.radioSquare.TabIndex = 1;
             this.radioSquare.TabStop = true;
             this.radioSquare.Text = "Квадрат";
@@ -412,10 +472,10 @@
             this.radioRectangle.AutoSize = true;
             this.radioRectangle.Location = new System.Drawing.Point(126, 15);
             this.radioRectangle.Name = "radioRectangle";
-            this.radioRectangle.Size = new System.Drawing.Size(90, 17);
+            this.radioRectangle.Size = new System.Drawing.Size(130, 20);
             this.radioRectangle.TabIndex = 2;
             this.radioRectangle.TabStop = true;
-            this.radioRectangle.Text = "Прямоуг.";
+            this.radioRectangle.Text = "Прямоугольник";
             this.radioRectangle.UseVisualStyleBackColor = true;
             this.radioRectangle.CheckedChanged += new System.EventHandler(this.MaskShapeChanged);
             // 
@@ -424,7 +484,7 @@
             this.lblMaskWidth.AutoSize = true;
             this.lblMaskWidth.Location = new System.Drawing.Point(6, 40);
             this.lblMaskWidth.Name = "lblMaskWidth";
-            this.lblMaskWidth.Size = new System.Drawing.Size(20, 13);
+            this.lblMaskWidth.Size = new System.Drawing.Size(21, 16);
             this.lblMaskWidth.TabIndex = 3;
             this.lblMaskWidth.Text = "Ш:";
             // 
@@ -433,7 +493,7 @@
             this.lblMaskHeight.AutoSize = true;
             this.lblMaskHeight.Location = new System.Drawing.Point(120, 40);
             this.lblMaskHeight.Name = "lblMaskHeight";
-            this.lblMaskHeight.Size = new System.Drawing.Size(18, 13);
+            this.lblMaskHeight.Size = new System.Drawing.Size(19, 16);
             this.lblMaskHeight.TabIndex = 4;
             this.lblMaskHeight.Text = "В:";
             // 
@@ -451,7 +511,7 @@
             0,
             0});
             this.nudMaskWidth.Name = "nudMaskWidth";
-            this.nudMaskWidth.Size = new System.Drawing.Size(80, 20);
+            this.nudMaskWidth.Size = new System.Drawing.Size(80, 22);
             this.nudMaskWidth.TabIndex = 5;
             this.nudMaskWidth.Value = new decimal(new int[] {
             100,
@@ -473,7 +533,7 @@
             0,
             0});
             this.nudMaskHeight.Name = "nudMaskHeight";
-            this.nudMaskHeight.Size = new System.Drawing.Size(80, 20);
+            this.nudMaskHeight.Size = new System.Drawing.Size(80, 22);
             this.nudMaskHeight.TabIndex = 6;
             this.nudMaskHeight.Value = new decimal(new int[] {
             100,
@@ -581,16 +641,6 @@
             // 
             // groupBoxBinarizationImage
             // 
-            this.groupBoxBinarizationImage = new System.Windows.Forms.GroupBox();
-            this.comboBinarizationImage = new System.Windows.Forms.ComboBox();
-            this.lblSelectedBinarizationMethod = new System.Windows.Forms.Label();
-            this.btnApplyBinarization = new System.Windows.Forms.Button();
-            this.btnApplyToView = new System.Windows.Forms.Button();
-            this.btnCancelBinarization = new System.Windows.Forms.Button();
-            this.groupBoxBinarizationImage.SuspendLayout();
-
-            // groupBoxBinarizationImage
-            // 
             this.groupBoxBinarizationImage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.groupBoxBinarizationImage.Controls.Add(this.comboBinarizationImage);
             this.groupBoxBinarizationImage.Controls.Add(this.lblSelectedBinarizationMethod);
@@ -599,26 +649,24 @@
             this.groupBoxBinarizationImage.Controls.Add(this.btnCancelBinarization);
             this.groupBoxBinarizationImage.Location = new System.Drawing.Point(220, 531);
             this.groupBoxBinarizationImage.Name = "groupBoxBinarizationImage";
-            this.groupBoxBinarizationImage.Size = new System.Drawing.Size(520, 50);
+            this.groupBoxBinarizationImage.Size = new System.Drawing.Size(540, 50);
             this.groupBoxBinarizationImage.TabIndex = 11;
             this.groupBoxBinarizationImage.TabStop = false;
             this.groupBoxBinarizationImage.Text = "Изображение для бинаризации";
             this.groupBoxBinarizationImage.Visible = false;
-
             // 
             // comboBinarizationImage
             // 
             this.comboBinarizationImage.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBinarizationImage.FormattingEnabled = true;
             this.comboBinarizationImage.Items.AddRange(new object[] {
-                "Изображение 1",
-                "Изображение 2"});
+            "Изображение 1",
+            "Изображение 2"});
             this.comboBinarizationImage.Location = new System.Drawing.Point(10, 20);
             this.comboBinarizationImage.Name = "comboBinarizationImage";
             this.comboBinarizationImage.Size = new System.Drawing.Size(130, 24);
             this.comboBinarizationImage.TabIndex = 0;
             this.comboBinarizationImage.SelectedIndexChanged += new System.EventHandler(this.BinarizationImageSelectionChanged);
-
             // 
             // lblSelectedBinarizationMethod
             // 
@@ -627,57 +675,187 @@
             this.lblSelectedBinarizationMethod.ForeColor = System.Drawing.Color.Gray;
             this.lblSelectedBinarizationMethod.Location = new System.Drawing.Point(150, 23);
             this.lblSelectedBinarizationMethod.Name = "lblSelectedBinarizationMethod";
-            this.lblSelectedBinarizationMethod.Size = new System.Drawing.Size(60, 17);
+            this.lblSelectedBinarizationMethod.Size = new System.Drawing.Size(123, 17);
             this.lblSelectedBinarizationMethod.TabIndex = 1;
             this.lblSelectedBinarizationMethod.Text = "Метод не выбран";
-
             // 
             // btnApplyToView
             // 
             this.btnApplyToView.Enabled = false;
-            this.btnApplyToView.Location = new System.Drawing.Point(270, 17);
+            this.btnApplyToView.Location = new System.Drawing.Point(275, 17);
             this.btnApplyToView.Name = "btnApplyToView";
-            this.btnApplyToView.Size = new System.Drawing.Size(85, 25);
+            this.btnApplyToView.Size = new System.Drawing.Size(100, 25);
             this.btnApplyToView.TabIndex = 2;
             this.btnApplyToView.Text = "Применить";
             this.btnApplyToView.UseVisualStyleBackColor = true;
             this.btnApplyToView.Click += new System.EventHandler(this.BtnApplyToView_Click);
-
             // 
             // btnApplyBinarization
             // 
             this.btnApplyBinarization.Enabled = false;
-            this.btnApplyBinarization.Location = new System.Drawing.Point(360, 17);
+            this.btnApplyBinarization.Location = new System.Drawing.Point(385, 17);
             this.btnApplyBinarization.Name = "btnApplyBinarization";
-            this.btnApplyBinarization.Size = new System.Drawing.Size(85, 25);
+            this.btnApplyBinarization.Size = new System.Drawing.Size(90, 25);
             this.btnApplyBinarization.TabIndex = 3;
             this.btnApplyBinarization.Text = "Сохранить";
             this.btnApplyBinarization.UseVisualStyleBackColor = true;
             this.btnApplyBinarization.Click += new System.EventHandler(this.BtnApplyBinarization_Click);
-
             // 
             // btnCancelBinarization
             // 
-            this.btnCancelBinarization.Enabled = true;
-            this.btnCancelBinarization.Location = new System.Drawing.Point(450, 17);
+            this.btnCancelBinarization.Location = new System.Drawing.Point(485, 17);
             this.btnCancelBinarization.Name = "btnCancelBinarization";
-            this.btnCancelBinarization.Size = new System.Drawing.Size(60, 25);
+            this.btnCancelBinarization.Size = new System.Drawing.Size(80, 25);
             this.btnCancelBinarization.TabIndex = 4;
             this.btnCancelBinarization.Text = "Отмена";
             this.btnCancelBinarization.UseVisualStyleBackColor = true;
             this.btnCancelBinarization.Click += new System.EventHandler(this.BtnCancelBinarization_Click);
-
-            this.groupBoxBinarizationImage.ResumeLayout(false);
-            this.groupBoxBinarizationImage.PerformLayout();
-
-            // Добавляем контрол на форму
-            this.Controls.Add(this.groupBoxBinarizationImage);
+            // 
+            // groupBoxFilterCommon
+            // 
+            this.groupBoxFilterCommon.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.groupBoxFilterCommon.Controls.Add(this.comboFilterImage);
+            this.groupBoxFilterCommon.Controls.Add(this.lblFilterMethod);
+            this.groupBoxFilterCommon.Controls.Add(this.lblFilterParam1);
+            this.groupBoxFilterCommon.Controls.Add(this.nudFilterParam1);
+            this.groupBoxFilterCommon.Controls.Add(this.lblFilterParam2);
+            this.groupBoxFilterCommon.Controls.Add(this.nudFilterParam2);
+            this.groupBoxFilterCommon.Controls.Add(this.btnFilterApply);
+            this.groupBoxFilterCommon.Controls.Add(this.btnFilterSave);
+            this.groupBoxFilterCommon.Controls.Add(this.btnFilterCancel);
+            this.groupBoxFilterCommon.Location = new System.Drawing.Point(220, 531);
+            this.groupBoxFilterCommon.Name = "groupBoxFilterCommon";
+            this.groupBoxFilterCommon.Size = new System.Drawing.Size(560, 70);
+            this.groupBoxFilterCommon.TabIndex = 23;
+            this.groupBoxFilterCommon.TabStop = false;
+            this.groupBoxFilterCommon.Text = "Изображение для фильтрации";
+            this.groupBoxFilterCommon.Visible = false;
+            // 
+            // comboFilterImage
+            // 
+            this.comboFilterImage.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboFilterImage.FormattingEnabled = true;
+            this.comboFilterImage.Items.AddRange(new object[] {
+            "Изображение 1",
+            "Изображение 2"});
+            this.comboFilterImage.Location = new System.Drawing.Point(10, 20);
+            this.comboFilterImage.Name = "comboFilterImage";
+            this.comboFilterImage.Size = new System.Drawing.Size(130, 24);
+            this.comboFilterImage.TabIndex = 0;
+            // 
+            // lblFilterMethod
+            // 
+            this.lblFilterMethod.AutoSize = true;
+            this.lblFilterMethod.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.lblFilterMethod.ForeColor = System.Drawing.Color.Gray;
+            this.lblFilterMethod.Location = new System.Drawing.Point(150, 23);
+            this.lblFilterMethod.Name = "lblFilterMethod";
+            this.lblFilterMethod.Size = new System.Drawing.Size(123, 17);
+            this.lblFilterMethod.TabIndex = 1;
+            this.lblFilterMethod.Text = "Метод не выбран";
+            // 
+            // lblFilterParam1
+            // 
+            this.lblFilterParam1.AutoSize = true;
+            this.lblFilterParam1.Location = new System.Drawing.Point(270, 23);
+            this.lblFilterParam1.Name = "lblFilterParam1";
+            this.lblFilterParam1.Size = new System.Drawing.Size(23, 16);
+            this.lblFilterParam1.TabIndex = 2;
+            this.lblFilterParam1.Text = "W:";
+            this.lblFilterParam1.Visible = false;
+            // 
+            // nudFilterParam1
+            // 
+            this.nudFilterParam1.Location = new System.Drawing.Point(310, 19);
+            this.nudFilterParam1.Maximum = new decimal(new int[] {
+            15,
+            0,
+            0,
+            0});
+            this.nudFilterParam1.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.nudFilterParam1.Name = "nudFilterParam1";
+            this.nudFilterParam1.Size = new System.Drawing.Size(55, 22);
+            this.nudFilterParam1.TabIndex = 3;
+            this.nudFilterParam1.Value = new decimal(new int[] {
+            3,
+            0,
+            0,
+            0});
+            this.nudFilterParam1.Visible = false;
+            // 
+            // lblFilterParam2
+            // 
+            this.lblFilterParam2.AutoSize = true;
+            this.lblFilterParam2.Location = new System.Drawing.Point(375, 23);
+            this.lblFilterParam2.Name = "lblFilterParam2";
+            this.lblFilterParam2.Size = new System.Drawing.Size(20, 16);
+            this.lblFilterParam2.TabIndex = 4;
+            this.lblFilterParam2.Text = "H:";
+            this.lblFilterParam2.Visible = false;
+            // 
+            // nudFilterParam2
+            // 
+            this.nudFilterParam2.Location = new System.Drawing.Point(400, 19);
+            this.nudFilterParam2.Maximum = new decimal(new int[] {
+            15,
+            0,
+            0,
+            0});
+            this.nudFilterParam2.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.nudFilterParam2.Name = "nudFilterParam2";
+            this.nudFilterParam2.Size = new System.Drawing.Size(55, 22);
+            this.nudFilterParam2.TabIndex = 5;
+            this.nudFilterParam2.Value = new decimal(new int[] {
+            3,
+            0,
+            0,
+            0});
+            this.nudFilterParam2.Visible = false;
+            // 
+            // btnFilterApply
+            // 
+            this.btnFilterApply.Enabled = false;
+            this.btnFilterApply.Location = new System.Drawing.Point(455, 17);
+            this.btnFilterApply.Name = "btnFilterApply";
+            this.btnFilterApply.Size = new System.Drawing.Size(100, 25);
+            this.btnFilterApply.TabIndex = 6;
+            this.btnFilterApply.Text = "Применить";
+            this.btnFilterApply.UseVisualStyleBackColor = true;
+            this.btnFilterApply.Click += new System.EventHandler(this.btnFilterApply_Click_1);
+            // 
+            // btnFilterSave
+            // 
+            this.btnFilterSave.Enabled = false;
+            this.btnFilterSave.Location = new System.Drawing.Point(565, 17);
+            this.btnFilterSave.Name = "btnFilterSave";
+            this.btnFilterSave.Size = new System.Drawing.Size(90, 25);
+            this.btnFilterSave.TabIndex = 7;
+            this.btnFilterSave.Text = "Сохранить";
+            this.btnFilterSave.UseVisualStyleBackColor = true;
+            // 
+            // btnFilterCancel
+            // 
+            this.btnFilterCancel.Location = new System.Drawing.Point(665, 17);
+            this.btnFilterCancel.Name = "btnFilterCancel";
+            this.btnFilterCancel.Size = new System.Drawing.Size(80, 25);
+            this.btnFilterCancel.TabIndex = 8;
+            this.btnFilterCancel.Text = "Отмена";
+            this.btnFilterCancel.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1147, 590);
+            this.Controls.Add(this.groupBoxFilterCommon);
             this.Controls.Add(this.groupBoxBinarizationImage);
             this.Controls.Add(this.btnStart);
             this.Controls.Add(this.groupBoxChannels);
@@ -710,6 +888,10 @@
             this.groupBoxChannels.PerformLayout();
             this.groupBoxBinarizationImage.ResumeLayout(false);
             this.groupBoxBinarizationImage.PerformLayout();
+            this.groupBoxFilterCommon.ResumeLayout(false);
+            this.groupBoxFilterCommon.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudFilterParam1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudFilterParam2)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
