@@ -31,6 +31,15 @@
         private System.Windows.Forms.ToolStripMenuItem medianFilterToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gaussianFilterToolStripMenuItem;
 
+        // Меню частотной фильтрации
+        private System.Windows.Forms.ToolStripMenuItem freqFilteringToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem lowPassToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem highPassToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem bandRejectToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem bandPassToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem notchRejectToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem notchPassToolStripMenuItem;
+
         // Единое окно фильтрации
         private System.Windows.Forms.GroupBox groupBoxFilterCommon;
         private System.Windows.Forms.ComboBox comboFilterImage;
@@ -42,6 +51,12 @@
         private System.Windows.Forms.Button btnFilterApply;
         private System.Windows.Forms.Button btnFilterSave;
         private System.Windows.Forms.Button btnFilterCancel;
+        // Переключатель Окрестность / Фурье-образ
+        private System.Windows.Forms.Label lblFreqModeNeighborhood;
+        private System.Windows.Forms.Label lblFreqModeFourier;
+        private System.Windows.Forms.Panel panelFreqSwitch;
+        private System.Windows.Forms.Panel panelFreqKnobLeft;
+        private System.Windows.Forms.Panel panelFreqKnobRight;
 
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Label progressLabel;
@@ -110,6 +125,44 @@
             this.medianFilterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.gaussianFilterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            // Частотная фильтрация
+            this.freqFilteringToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.lowPassToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.highPassToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.bandRejectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.bandPassToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.notchRejectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.notchPassToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+
+            this.freqFilteringToolStripMenuItem.Text = "Частотная фильтрация";
+
+            this.lowPassToolStripMenuItem.Text = "Низкочастотный фильтр";
+            this.lowPassToolStripMenuItem.Click += new System.EventHandler(this.FreqFilterTypeSelected);
+
+            this.highPassToolStripMenuItem.Text = "Высокочастотный фильтр";
+            this.highPassToolStripMenuItem.Click += new System.EventHandler(this.FreqFilterTypeSelected);
+
+            this.bandRejectToolStripMenuItem.Text = "Режекторный фильтр";
+            this.bandRejectToolStripMenuItem.Click += new System.EventHandler(this.FreqFilterTypeSelected);
+
+            this.bandPassToolStripMenuItem.Text = "Полосовой фильтр";
+            this.bandPassToolStripMenuItem.Click += new System.EventHandler(this.FreqFilterTypeSelected);
+
+            this.notchRejectToolStripMenuItem.Text = "Узкополосный режекторный";
+            this.notchRejectToolStripMenuItem.Click += new System.EventHandler(this.FreqFilterTypeSelected);
+
+            this.notchPassToolStripMenuItem.Text = "Узкополосный полосовой";
+            this.notchPassToolStripMenuItem.Click += new System.EventHandler(this.FreqFilterTypeSelected);
+
+            this.freqFilteringToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+                this.lowPassToolStripMenuItem,
+                this.highPassToolStripMenuItem,
+                this.bandRejectToolStripMenuItem,
+                this.bandPassToolStripMenuItem,
+                this.notchRejectToolStripMenuItem,
+                this.notchPassToolStripMenuItem});
+
+            this.menuStrip1.Items.Add(this.freqFilteringToolStripMenuItem);
             this.progressLabel = new System.Windows.Forms.Label();
             this.groupBoxSelectedOperation = new System.Windows.Forms.GroupBox();
             this.lblSelectedOperation = new System.Windows.Forms.Label();
@@ -573,7 +626,7 @@
             // radioRG
             // 
             this.radioRG.AutoSize = true;
-            this.radioRG.Location = new System.Drawing.Point(70, 20);
+            this.radioRG.Location = new System.Drawing.Point(80, 20);
             this.radioRG.Name = "radioRG";
             this.radioRG.Size = new System.Drawing.Size(48, 20);
             this.radioRG.TabIndex = 1;
@@ -585,7 +638,7 @@
             // radioRB
             // 
             this.radioRB.AutoSize = true;
-            this.radioRB.Location = new System.Drawing.Point(125, 20);
+            this.radioRB.Location = new System.Drawing.Point(135, 20);
             this.radioRB.Name = "radioRB";
             this.radioRB.Size = new System.Drawing.Size(47, 20);
             this.radioRB.TabIndex = 2;
@@ -597,7 +650,7 @@
             // radioGB
             // 
             this.radioGB.AutoSize = true;
-            this.radioGB.Location = new System.Drawing.Point(180, 20);
+            this.radioGB.Location = new System.Drawing.Point(190, 20);
             this.radioGB.Name = "radioGB";
             this.radioGB.Size = new System.Drawing.Size(47, 20);
             this.radioGB.TabIndex = 3;
@@ -664,7 +717,7 @@
             "Изображение 2"});
             this.comboBinarizationImage.Location = new System.Drawing.Point(10, 20);
             this.comboBinarizationImage.Name = "comboBinarizationImage";
-            this.comboBinarizationImage.Size = new System.Drawing.Size(130, 24);
+            this.comboBinarizationImage.Size = new System.Drawing.Size(135, 24);
             this.comboBinarizationImage.TabIndex = 0;
             this.comboBinarizationImage.SelectedIndexChanged += new System.EventHandler(this.BinarizationImageSelectionChanged);
             // 
@@ -682,7 +735,7 @@
             // btnApplyToView
             // 
             this.btnApplyToView.Enabled = false;
-            this.btnApplyToView.Location = new System.Drawing.Point(275, 17);
+            this.btnApplyToView.Location = new System.Drawing.Point(300, 17);
             this.btnApplyToView.Name = "btnApplyToView";
             this.btnApplyToView.Size = new System.Drawing.Size(100, 25);
             this.btnApplyToView.TabIndex = 2;
@@ -693,7 +746,7 @@
             // btnApplyBinarization
             // 
             this.btnApplyBinarization.Enabled = false;
-            this.btnApplyBinarization.Location = new System.Drawing.Point(385, 17);
+            this.btnApplyBinarization.Location = new System.Drawing.Point(410, 17);
             this.btnApplyBinarization.Name = "btnApplyBinarization";
             this.btnApplyBinarization.Size = new System.Drawing.Size(90, 25);
             this.btnApplyBinarization.TabIndex = 3;
@@ -703,7 +756,7 @@
             // 
             // btnCancelBinarization
             // 
-            this.btnCancelBinarization.Location = new System.Drawing.Point(485, 17);
+            this.btnCancelBinarization.Location = new System.Drawing.Point(510, 17);
             this.btnCancelBinarization.Name = "btnCancelBinarization";
             this.btnCancelBinarization.Size = new System.Drawing.Size(80, 25);
             this.btnCancelBinarization.TabIndex = 4;
@@ -740,7 +793,7 @@
             "Изображение 2"});
             this.comboFilterImage.Location = new System.Drawing.Point(10, 20);
             this.comboFilterImage.Name = "comboFilterImage";
-            this.comboFilterImage.Size = new System.Drawing.Size(130, 24);
+            this.comboFilterImage.Size = new System.Drawing.Size(135, 24);
             this.comboFilterImage.TabIndex = 0;
             // 
             // lblFilterMethod
@@ -757,7 +810,7 @@
             // lblFilterParam1
             // 
             this.lblFilterParam1.AutoSize = true;
-            this.lblFilterParam1.Location = new System.Drawing.Point(270, 23);
+            this.lblFilterParam1.Location = new System.Drawing.Point(365, 23);
             this.lblFilterParam1.Name = "lblFilterParam1";
             this.lblFilterParam1.Size = new System.Drawing.Size(23, 16);
             this.lblFilterParam1.TabIndex = 2;
@@ -766,7 +819,7 @@
             // 
             // nudFilterParam1
             // 
-            this.nudFilterParam1.Location = new System.Drawing.Point(310, 19);
+            this.nudFilterParam1.Location = new System.Drawing.Point(440, 19);
             this.nudFilterParam1.Maximum = new decimal(new int[] {
             15,
             0,
@@ -790,7 +843,7 @@
             // lblFilterParam2
             // 
             this.lblFilterParam2.AutoSize = true;
-            this.lblFilterParam2.Location = new System.Drawing.Point(375, 23);
+            this.lblFilterParam2.Location = new System.Drawing.Point(525, 23);
             this.lblFilterParam2.Name = "lblFilterParam2";
             this.lblFilterParam2.Size = new System.Drawing.Size(20, 16);
             this.lblFilterParam2.TabIndex = 4;
@@ -799,7 +852,7 @@
             // 
             // nudFilterParam2
             // 
-            this.nudFilterParam2.Location = new System.Drawing.Point(400, 19);
+            this.nudFilterParam2.Location = new System.Drawing.Point(600, 19);
             this.nudFilterParam2.Maximum = new decimal(new int[] {
             15,
             0,
@@ -823,18 +876,18 @@
             // btnFilterApply
             // 
             this.btnFilterApply.Enabled = false;
-            this.btnFilterApply.Location = new System.Drawing.Point(455, 17);
+            this.btnFilterApply.Location = new System.Drawing.Point(700, 17);
             this.btnFilterApply.Name = "btnFilterApply";
             this.btnFilterApply.Size = new System.Drawing.Size(100, 25);
             this.btnFilterApply.TabIndex = 6;
             this.btnFilterApply.Text = "Применить";
             this.btnFilterApply.UseVisualStyleBackColor = true;
-            this.btnFilterApply.Click += new System.EventHandler(this.btnFilterApply_Click_1);
+            this.btnFilterApply.Click += new System.EventHandler(this.BtnFilterApply_Click);
             // 
             // btnFilterSave
             // 
             this.btnFilterSave.Enabled = false;
-            this.btnFilterSave.Location = new System.Drawing.Point(565, 17);
+            this.btnFilterSave.Location = new System.Drawing.Point(810, 17);
             this.btnFilterSave.Name = "btnFilterSave";
             this.btnFilterSave.Size = new System.Drawing.Size(90, 25);
             this.btnFilterSave.TabIndex = 7;
@@ -843,7 +896,7 @@
             // 
             // btnFilterCancel
             // 
-            this.btnFilterCancel.Location = new System.Drawing.Point(665, 17);
+            this.btnFilterCancel.Location = new System.Drawing.Point(910, 17);
             this.btnFilterCancel.Name = "btnFilterCancel";
             this.btnFilterCancel.Size = new System.Drawing.Size(80, 25);
             this.btnFilterCancel.TabIndex = 8;
@@ -852,6 +905,65 @@
             // 
             // Form1
             // 
+            // Переключатель Окрестность / Фурье-образ
+            this.lblFreqModeNeighborhood = new System.Windows.Forms.Label();
+            this.lblFreqModeFourier = new System.Windows.Forms.Label();
+            this.panelFreqSwitch = new System.Windows.Forms.Panel();
+            this.panelFreqKnobLeft = new System.Windows.Forms.Panel();
+            this.panelFreqKnobRight = new System.Windows.Forms.Panel();
+
+            // lblFreqModeNeighborhood
+            this.lblFreqModeNeighborhood.AutoSize = true;
+            this.lblFreqModeNeighborhood.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.5F);
+            this.lblFreqModeNeighborhood.Location = new System.Drawing.Point(225, 593);
+            this.lblFreqModeNeighborhood.Name = "lblFreqModeNeighborhood";
+            this.lblFreqModeNeighborhood.Text = "Окрестность";
+            this.lblFreqModeNeighborhood.Visible = false;
+            this.lblFreqModeNeighborhood.ForeColor = System.Drawing.Color.DarkBlue;
+            this.lblFreqModeNeighborhood.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.lblFreqModeNeighborhood.Click += new System.EventHandler(this.LblFreqMode_Click);
+
+            // panelFreqSwitch (полоска-прямоугольник)
+            this.panelFreqSwitch.Location = new System.Drawing.Point(300, 593);
+            this.panelFreqSwitch.Size = new System.Drawing.Size(46, 16);
+            this.panelFreqSwitch.BackColor = System.Drawing.Color.LightGray;
+            this.panelFreqSwitch.Visible = false;
+            this.panelFreqSwitch.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.panelFreqSwitch.Click += new System.EventHandler(this.PanelFreqSwitch_Click);
+
+            // panelFreqKnobLeft (левый чёрный круг)
+            this.panelFreqKnobLeft.Size = new System.Drawing.Size(5, 5);
+            this.panelFreqKnobLeft.BackColor = System.Drawing.Color.Black;
+            this.panelFreqKnobLeft.Visible = false;
+            System.Drawing.Drawing2D.GraphicsPath pathLeft = new System.Drawing.Drawing2D.GraphicsPath();
+            pathLeft.AddEllipse(0, 0, 5, 5);
+            this.panelFreqKnobLeft.Region = new System.Drawing.Region(pathLeft);
+
+            // panelFreqKnobRight (правый чёрный круг)
+            this.panelFreqKnobRight.Size = new System.Drawing.Size(5, 5);
+            this.panelFreqKnobRight.BackColor = System.Drawing.Color.Black;
+            this.panelFreqKnobRight.Visible = false;
+            System.Drawing.Drawing2D.GraphicsPath pathRight = new System.Drawing.Drawing2D.GraphicsPath();
+            pathRight.AddEllipse(0, 0, 5, 5);
+            this.panelFreqKnobRight.Region = new System.Drawing.Region(pathRight);
+
+            // lblFreqModeFourier
+            this.lblFreqModeFourier.AutoSize = true;
+            this.lblFreqModeFourier.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.5F);
+            this.lblFreqModeFourier.Location = new System.Drawing.Point(355, 593);
+            this.lblFreqModeFourier.Name = "lblFreqModeFourier";
+            this.lblFreqModeFourier.Text = "Фурье-образ";
+            this.lblFreqModeFourier.Visible = false;
+            this.lblFreqModeFourier.ForeColor = System.Drawing.Color.Gray;
+            this.lblFreqModeFourier.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.lblFreqModeFourier.Click += new System.EventHandler(this.LblFreqMode_Click);
+
+            this.Controls.Add(this.lblFreqModeNeighborhood);
+            this.Controls.Add(this.panelFreqSwitch);
+            this.panelFreqSwitch.Controls.Add(this.panelFreqKnobLeft);
+            this.panelFreqSwitch.Controls.Add(this.panelFreqKnobRight);
+            this.Controls.Add(this.lblFreqModeFourier);
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1147, 590);

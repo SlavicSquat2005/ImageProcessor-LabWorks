@@ -49,6 +49,9 @@ namespace ImgApp_2_WinForms
         private string selectedFilterMethod = null;
         private string currentFilterType = null; // "linear", "median", "gaussian"
 
+        private string selectedFreqFilterType = null;
+        private int freqDisplayMode = 0; // 0 = окрестность, 1 = Фурье-образ
+
         public Form1()
         {
             InitializeComponent();
@@ -910,6 +913,7 @@ namespace ImgApp_2_WinForms
             selectedBinarizationImage = null;
             selectedFilterMethod = null;
             currentFilterType = null;
+            selectedFreqFilterType = null;
             comboBinarizationImage.SelectedIndex = -1;
             lblSelectedBinarizationMethod.Text = "Метод не выбран";
             btnApplyToView.Enabled = false;
@@ -918,6 +922,13 @@ namespace ImgApp_2_WinForms
             defaultFileName = "sum.jpg";
             selectedOperationAction = PerformSum;
             groupBoxMaskSettings.Visible = false;
+
+            lblFreqModeNeighborhood.Visible = false;
+            panelFreqSwitch.Visible = false;
+            panelFreqKnobLeft.Visible = false;
+            panelFreqKnobRight.Visible = false;
+            lblFreqModeFourier.Visible = false;
+
             UpdateSelectedOperationDisplay();
         }
 
@@ -932,6 +943,7 @@ namespace ImgApp_2_WinForms
             selectedBinarizationImage = null;
             selectedFilterMethod = null;
             currentFilterType = null;
+            selectedFreqFilterType = null;
             comboBinarizationImage.SelectedIndex = -1;
             lblSelectedBinarizationMethod.Text = "Метод не выбран";
             btnApplyToView.Enabled = false;
@@ -940,6 +952,13 @@ namespace ImgApp_2_WinForms
             defaultFileName = "average.jpg";
             selectedOperationAction = PerformAverage;
             groupBoxMaskSettings.Visible = false;
+
+            lblFreqModeNeighborhood.Visible = false;
+            panelFreqSwitch.Visible = false;
+            panelFreqKnobLeft.Visible = false;
+            panelFreqKnobRight.Visible = false;
+            lblFreqModeFourier.Visible = false;
+
             UpdateSelectedOperationDisplay();
         }
 
@@ -954,6 +973,7 @@ namespace ImgApp_2_WinForms
             selectedBinarizationImage = null;
             selectedFilterMethod = null;
             currentFilterType = null;
+            selectedFreqFilterType = null;
             comboBinarizationImage.SelectedIndex = -1;
             lblSelectedBinarizationMethod.Text = "Метод не выбран";
             btnApplyToView.Enabled = false;
@@ -962,6 +982,13 @@ namespace ImgApp_2_WinForms
             defaultFileName = "max.jpg";
             selectedOperationAction = PerformMax;
             groupBoxMaskSettings.Visible = false;
+
+            lblFreqModeNeighborhood.Visible = false;
+            panelFreqSwitch.Visible = false;
+            panelFreqKnobLeft.Visible = false;
+            panelFreqKnobRight.Visible = false;
+            lblFreqModeFourier.Visible = false;
+
             UpdateSelectedOperationDisplay();
         }
 
@@ -976,6 +1003,7 @@ namespace ImgApp_2_WinForms
             selectedBinarizationImage = null;
             selectedFilterMethod = null;
             currentFilterType = null;
+            selectedFreqFilterType = null;
             comboBinarizationImage.SelectedIndex = -1;
             lblSelectedBinarizationMethod.Text = "Метод не выбран";
             btnApplyToView.Enabled = false;
@@ -984,6 +1012,13 @@ namespace ImgApp_2_WinForms
             defaultFileName = "min.jpg";
             selectedOperationAction = PerformMin;
             groupBoxMaskSettings.Visible = false;
+
+            lblFreqModeNeighborhood.Visible = false;
+            panelFreqSwitch.Visible = false;
+            panelFreqKnobLeft.Visible = false;
+            panelFreqKnobRight.Visible = false;
+            lblFreqModeFourier.Visible = false;
+
             UpdateSelectedOperationDisplay();
         }
 
@@ -998,6 +1033,7 @@ namespace ImgApp_2_WinForms
             selectedBinarizationImage = null;
             selectedFilterMethod = null;
             currentFilterType = null;
+            selectedFreqFilterType = null;
             comboBinarizationImage.SelectedIndex = -1;
             lblSelectedBinarizationMethod.Text = "Метод не выбран";
             btnApplyToView.Enabled = false;
@@ -1006,6 +1042,13 @@ namespace ImgApp_2_WinForms
             defaultFileName = "product.jpg";
             selectedOperationAction = PerformProduct;
             groupBoxMaskSettings.Visible = false;
+
+            lblFreqModeNeighborhood.Visible = false;
+            panelFreqSwitch.Visible = false;
+            panelFreqKnobLeft.Visible = false;
+            panelFreqKnobRight.Visible = false;
+            lblFreqModeFourier.Visible = false;
+
             UpdateSelectedOperationDisplay();
         }
 
@@ -1020,6 +1063,7 @@ namespace ImgApp_2_WinForms
             selectedBinarizationImage = null;
             selectedFilterMethod = null;
             currentFilterType = null;
+            selectedFreqFilterType = null;
             comboBinarizationImage.SelectedIndex = -1;
             lblSelectedBinarizationMethod.Text = "Метод не выбран";
             btnApplyToView.Enabled = false;
@@ -1028,6 +1072,13 @@ namespace ImgApp_2_WinForms
             defaultFileName = "masked.jpg";
             selectedOperationAction = PerformMask;
             groupBoxMaskSettings.Visible = true;
+
+            lblFreqModeNeighborhood.Visible = false;
+            panelFreqSwitch.Visible = false;
+            panelFreqKnobLeft.Visible = false;
+            panelFreqKnobRight.Visible = false;
+            lblFreqModeFourier.Visible = false;
+
             UpdateSelectedOperationDisplay();
         }
 
@@ -1119,10 +1170,17 @@ namespace ImgApp_2_WinForms
             btnStart.Size = new Size(138, 40);
 
             groupBoxBinarizationImage.Location = new Point(btnStart.Right + 20, btnStart.Top);
-            groupBoxBinarizationImage.Size = new Size(540, 50);
+            groupBoxBinarizationImage.Size = new Size(450, 50);
 
             groupBoxFilterCommon.Location = new Point(btnStart.Right + 20, btnStart.Top);
-            groupBoxFilterCommon.Size = new Size(560, 70);
+            groupBoxFilterCommon.Size = new Size(800, 50);
+
+            // Переключатель Окрестность / Фурье-образ
+            lblFreqModeNeighborhood.Location = new Point(btnStart.Right + 30, btnStart.Top + 55);
+            panelFreqSwitch.Location = new Point(lblFreqModeNeighborhood.Right + 5, btnStart.Top + 56);
+            panelFreqKnobLeft.Location = new Point(1, 4);
+            panelFreqKnobRight.Location = new Point(panelFreqSwitch.Width - 9, 4);
+            lblFreqModeFourier.Location = new Point(panelFreqSwitch.Right + 5, btnStart.Top + 55);
         }
 
         private void pictureBox2_Click(object sender, EventArgs e) { }
@@ -1168,6 +1226,14 @@ namespace ImgApp_2_WinForms
                 selectedBinarizationMethod = menuItem.Text;
                 groupBoxFilterCommon.Visible = false;
                 groupBoxBinarizationImage.Visible = true;
+                selectedFreqFilterType = null;
+
+                lblFreqModeNeighborhood.Visible = false;
+                panelFreqSwitch.Visible = false;
+                panelFreqKnobLeft.Visible = false;
+                panelFreqKnobRight.Visible = false;
+                lblFreqModeFourier.Visible = false;
+
                 lblSelectedBinarizationMethod.Text = selectedBinarizationMethod;
                 lblSelectedBinarizationMethod.ForeColor = System.Drawing.Color.Black;
                 UpdateApplyButtonState();
@@ -1723,12 +1789,19 @@ namespace ImgApp_2_WinForms
 
             selectedBinarizationMethod = null;
             selectedBinarizationImage = null;
+            selectedFreqFilterType = null;
             comboBinarizationImage.SelectedIndex = -1;
             lblSelectedBinarizationMethod.Text = "Метод не выбран";
             btnApplyToView.Enabled = false;
             btnApplyBinarization.Enabled = false;
 
             groupBoxFilterCommon.Visible = true;
+
+            lblFreqModeNeighborhood.Visible = false;
+            panelFreqSwitch.Visible = false;
+            panelFreqKnobLeft.Visible = false;
+            panelFreqKnobRight.Visible = false;
+            lblFreqModeFourier.Visible = false;
 
             if (menuItem == linearFilterToolStripMenuItem)
             {
@@ -1738,8 +1811,8 @@ namespace ImgApp_2_WinForms
                 lblFilterMethod.ForeColor = System.Drawing.Color.Black;
                 groupBoxFilterCommon.Text = "Изображение для фильтрации (Линейная)";
 
-                lblFilterParam1.Text = "W:";
-                lblFilterParam2.Text = "H:";
+                lblFilterParam1.Text = "Ширина:";
+                lblFilterParam2.Text = "Высота:";
                 lblFilterParam1.Visible = true;
                 nudFilterParam1.Visible = true;
                 lblFilterParam2.Visible = true;
@@ -1778,7 +1851,7 @@ namespace ImgApp_2_WinForms
                 lblFilterMethod.ForeColor = System.Drawing.Color.Black;
                 groupBoxFilterCommon.Text = "Изображение для фильтрации (Гаусс)";
 
-                lblFilterParam1.Text = "σ:";
+                lblFilterParam1.Text = "Сигма, σ:";
                 lblFilterParam2.Visible = false;
                 nudFilterParam2.Visible = false;
                 lblFilterParam1.Visible = true;
@@ -1834,6 +1907,16 @@ namespace ImgApp_2_WinForms
 
         private void BtnFilterApply_Click(object sender, EventArgs e)
         {
+            // Проверка, активна ли частотная фильтрация
+            if (!string.IsNullOrEmpty(selectedFreqFilterType))
+            {
+                Application.DoEvents(); // Предотвращает зависание интерфейса
+                ShowFreqVisualization();
+                Application.DoEvents();
+                ApplyFreqFilter();
+                return;
+            }
+
             if (string.IsNullOrEmpty(currentFilterType) || comboFilterImage.SelectedIndex == -1)
                 return;
 
@@ -1850,121 +1933,107 @@ namespace ImgApp_2_WinForms
             try
             {
                 ShowProgress($"Фильтрация ({selectedFilterMethod})");
-
                 Bitmap result = null;
 
                 if (currentFilterType == "linear")
                 {
                     int kw = (int)nudFilterParam1.Value;
                     int kh = (int)nudFilterParam2.Value;
-                    if (kw % 2 == 0) kw++;
-                    if (kh % 2 == 0) kh++;
-
+                    if (kw % 2 == 0) kw++; if (kh % 2 == 0) kh++;
                     double[,] kernel = new double[kh, kw];
                     double val = 1.0 / (kw * kh);
                     for (int y = 0; y < kh; y++)
                         for (int x = 0; x < kw; x++)
                             kernel[y, x] = val;
-
                     result = SpatialFilter.LinearFilter(img, kernel);
                 }
                 else if (currentFilterType == "median")
                 {
-                    int windowSize = (int)nudFilterParam1.Value;
-                    if (windowSize % 2 == 0) windowSize++;
-                    result = SpatialFilter.MedianFilter(img, windowSize);
+                    int ws = (int)nudFilterParam1.Value;
+                    if (ws % 2 == 0) ws++;
+                    result = SpatialFilter.MedianFilter(img, ws);
                 }
                 else if (currentFilterType == "gaussian")
                 {
-                    double sigma = (double)nudFilterParam1.Value;
-                    result = SpatialFilter.GaussianBlur(img, sigma);
+                    result = SpatialFilter.GaussianBlur(img, (double)nudFilterParam1.Value);
                 }
 
                 HideProgress();
-
-                if (result != null)
-                {
-                    if (comboFilterImage.SelectedIndex == 0)
-                    {
-                        if (image1Copy != null) image1Copy.Dispose();
-                        image1Copy = result;
-                        pictureBox1.Image = image1Copy;
-                    }
-                    else
-                    {
-                        if (image2Copy != null) image2Copy.Dispose();
-                        image2Copy = result;
-                        pictureBox2.Image = image2Copy;
-                    }
-                    UpdateHistogramForSelectedImage();
-                }
+                if (result != null) ApplyToImage(result, comboFilterImage.SelectedIndex);
             }
             catch (Exception ex)
             {
                 HideProgress();
-                MessageBox.Show($"Ошибка при фильтрации: {ex.Message}", "Ошибка",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void BtnFilterSave_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(currentFilterType) || comboFilterImage.SelectedIndex == -1)
+            // Частотная фильтрация — только сохранить
+            if (!string.IsNullOrEmpty(selectedFreqFilterType))
+            {
+                if (comboFilterImage.SelectedIndex == -1) return;
+                var img = comboFilterImage.SelectedIndex == 0 ? (image1Copy ?? image1) : (image2Copy ?? image2);
+                if (img == null || img.Width == 0) return;
+
+                string fType = "";
+                double p1 = (double)nudFilterParam1.Value;
+                double p2 = nudFilterParam2.Visible ? (double)nudFilterParam2.Value : 5.0;
+                switch (selectedFreqFilterType)
+                {
+                    case "Низкочастотный фильтр": fType = "lowpass"; break;
+                    case "Высокочастотный фильтр": fType = "highpass"; break;
+                    case "Режекторный фильтр": fType = "bandreject"; break;
+                    case "Полосовой фильтр": fType = "bandpass"; break;
+                    case "Узкополосный режекторный": fType = "notchreject"; break;
+                    case "Узкополосный полосовой": fType = "notchpass"; break;
+                }
+
+                try
+                {
+                    ShowProgress("Сохранение...");
+                    Bitmap result = FourierTransform.FreqFilterImage(img, fType, p1, p2);
+                    HideProgress();
+                    if (result != null)
+                    {
+                        SaveResultWithDialog(result, $"freq_{fType}.jpg");
+                        result.Dispose();
+                    }
+                }
+                catch (Exception ex) { HideProgress(); MessageBox.Show($"Ошибка: {ex.Message}"); }
                 return;
+            }
 
-            var img = comboFilterImage.SelectedIndex == 0 ?
-                (image1Copy ?? image1) : (image2Copy ?? image2);
-
-            if (img == null || img.Width == 0) return;
+            // Обычная фильтрация
+            if (string.IsNullOrEmpty(currentFilterType) || comboFilterImage.SelectedIndex == -1) return;
+            var src = comboFilterImage.SelectedIndex == 0 ? (image1Copy ?? image1) : (image2Copy ?? image2);
+            if (src == null || src.Width == 0) return;
 
             try
             {
-                ShowProgress("Сохранение результата...");
-
+                ShowProgress("Сохранение...");
                 Bitmap result = null;
-
                 if (currentFilterType == "linear")
                 {
-                    int kw = (int)nudFilterParam1.Value;
-                    int kh = (int)nudFilterParam2.Value;
-                    if (kw % 2 == 0) kw++;
-                    if (kh % 2 == 0) kh++;
-
-                    double[,] kernel = new double[kh, kw];
-                    double val = 1.0 / (kw * kh);
-                    for (int y = 0; y < kh; y++)
-                        for (int x = 0; x < kw; x++)
-                            kernel[y, x] = val;
-
-                    result = SpatialFilter.LinearFilter(img, kernel);
+                    int kw = (int)nudFilterParam1.Value, kh = (int)nudFilterParam2.Value;
+                    if (kw % 2 == 0) kw++; if (kh % 2 == 0) kh++;
+                    double[,] k = new double[kh, kw]; double v = 1.0 / (kw * kh);
+                    for (int y = 0; y < kh; y++) for (int x = 0; x < kw; x++) k[y, x] = v;
+                    result = SpatialFilter.LinearFilter(src, k);
                 }
                 else if (currentFilterType == "median")
                 {
-                    int windowSize = (int)nudFilterParam1.Value;
-                    if (windowSize % 2 == 0) windowSize++;
-                    result = SpatialFilter.MedianFilter(img, windowSize);
+                    int ws = (int)nudFilterParam1.Value; if (ws % 2 == 0) ws++;
+                    result = SpatialFilter.MedianFilter(src, ws);
                 }
                 else if (currentFilterType == "gaussian")
-                {
-                    double sigma = (double)nudFilterParam1.Value;
-                    result = SpatialFilter.GaussianBlur(img, sigma);
-                }
+                    result = SpatialFilter.GaussianBlur(src, (double)nudFilterParam1.Value);
 
                 HideProgress();
-
-                if (result != null)
-                {
-                    string filterName = selectedFilterMethod.Replace(" ", "_").ToLower();
-                    SaveResultWithDialog(result, $"filtered_{filterName}.jpg");
-                    result.Dispose();
-                }
+                if (result != null) { SaveResultWithDialog(result, $"filtered_{currentFilterType}.jpg"); result.Dispose(); }
             }
-            catch (Exception ex)
-            {
-                HideProgress();
-                MessageBox.Show($"Ошибка при сохранении: {ex.Message}", "Ошибка",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            catch (Exception ex) { HideProgress(); MessageBox.Show($"Ошибка: {ex.Message}"); }
         }
 
         private void BtnFilterCancel_Click(object sender, EventArgs e)
@@ -1989,6 +2058,125 @@ namespace ImgApp_2_WinForms
             nudFilterParam2.Visible = false;
         }
 
+        private void ApplyFreqFilter()
+        {
+            if (string.IsNullOrEmpty(selectedFreqFilterType) || comboFilterImage.SelectedIndex == -1)
+                return;
+
+            var img = comboFilterImage.SelectedIndex == 0 ?
+                (image1Copy ?? image1) : (image2Copy ?? image2);
+
+            if (img == null || img.Width == 0)
+            {
+                MessageBox.Show("Изображение не загружено!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Определяем тип фильтра и параметры
+            string fType = "";
+            double p1 = (double)nudFilterParam1.Value;
+            double p2 = nudFilterParam2.Visible ? (double)nudFilterParam2.Value : 5.0;
+
+            switch (selectedFreqFilterType)
+            {
+                case "Низкочастотный фильтр": fType = "lowpass"; break;
+                case "Высокочастотный фильтр": fType = "highpass"; break;
+                case "Режекторный фильтр": fType = "bandreject"; break;
+                case "Полосовой фильтр": fType = "bandpass"; break;
+                case "Узкополосный режекторный": fType = "notchreject"; break;
+                case "Узкополосный полосовой": fType = "notchpass"; break;
+            }
+
+            try
+            {
+                // Применяем фильтр
+                ShowProgress($"Частотная фильтрация ({selectedFreqFilterType})...");
+                Bitmap result = FourierTransform.FreqFilterImage(img, fType, p1, p2);
+                HideProgress();
+
+                if (result != null)
+                {
+                    ApplyToImage(result, comboFilterImage.SelectedIndex);
+                }
+            }
+            catch (Exception ex)
+            {
+                HideProgress();
+                MessageBox.Show($"Ошибка частотной фильтрации: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void ApplyToImage(Bitmap result, int index)
+        {
+            if (index == 0)
+            {
+                if (image1Copy != null) image1Copy.Dispose();
+                image1Copy = result;
+                pictureBox1.Image = image1Copy;
+            }
+            else
+            {
+                if (image2Copy != null) image2Copy.Dispose();
+                image2Copy = result;
+                pictureBox2.Image = image2Copy;
+            }
+            UpdateHistogramForSelectedImage();
+        }
+
+        private void ShowFreqVisualization()
+        {
+            if (string.IsNullOrEmpty(selectedFreqFilterType) || comboFilterImage.SelectedIndex == -1)
+                return;
+
+            var img = comboFilterImage.SelectedIndex == 0 ?
+                (image1Copy ?? image1) : (image2Copy ?? image2);
+
+            if (img == null || img.Width == 0) return;
+
+            string fType = "";
+            double p1 = (double)nudFilterParam1.Value;
+            double p2 = nudFilterParam2.Visible ? (double)nudFilterParam2.Value : 5.0;
+
+            switch (selectedFreqFilterType)
+            {
+                case "Низкочастотный фильтр": fType = "lowpass"; break;
+                case "Высокочастотный фильтр": fType = "highpass"; break;
+                case "Режекторный фильтр": fType = "bandreject"; break;
+                case "Полосовой фильтр": fType = "bandpass"; break;
+                case "Узкополосный режекторный": fType = "notchreject"; break;
+                case "Узкополосный полосовой": fType = "notchpass"; break;
+            }
+
+            Bitmap visBmp = null;
+
+            if (freqDisplayMode == 0)
+            {
+                // Окрестность (маска фильтра)
+                visBmp = FourierTransform.VisualizeFreqFilter(img, fType, p1, p2);
+            }
+            else
+            {
+                // Фурье-образ
+                visBmp = FourierTransform.VisualizeFullFourier(img);
+            }
+
+            if (visBmp != null)
+            {
+                if (comboFilterImage.SelectedIndex == 0)
+                {
+                    if (image2Copy != null) image2Copy.Dispose();
+                    image2Copy = visBmp;
+                    pictureBox2.Image = image2Copy;
+                }
+                else
+                {
+                    if (image1Copy != null) image1Copy.Dispose();
+                    image1Copy = visBmp;
+                    pictureBox1.Image = image1Copy;
+                }
+            }
+        }
+
         private class ImageData : IDisposable
         {
             public int Width { get; set; }
@@ -2002,9 +2190,641 @@ namespace ImgApp_2_WinForms
             }
         }
 
-        private void btnFilterApply_Click_1(object sender, EventArgs e)
+        private void FreqFilterTypeSelected(object sender, EventArgs e)
         {
+            var menuItem = sender as ToolStripMenuItem;
+            if (menuItem == null) return;
 
+            groupBoxBinarizationImage.Visible = false;
+            selectedBinarizationMethod = null; selectedFilterMethod = null; currentFilterType = null;
+
+            groupBoxFilterCommon.Visible = true;
+            groupBoxFilterCommon.Text = "Изображение для частотной фильтрации";
+            selectedFreqFilterType = menuItem.Text;
+            lblFilterMethod.Text = menuItem.Text;
+            lblFilterMethod.ForeColor = System.Drawing.Color.Black;
+
+            // Сначала скрываем всё, потом настраиваем
+            lblFilterParam1.Visible = false; nudFilterParam1.Visible = false;
+            lblFilterParam2.Visible = false; nudFilterParam2.Visible = false;
+
+            switch (menuItem.Text)
+            {
+                case "Низкочастотный фильтр":
+                case "Высокочастотный фильтр":
+                    lblFilterParam1.Text = "Радиус:";
+                    lblFilterParam1.Visible = true;
+                    nudFilterParam1.Visible = true;
+                    // Сначала меняем максимум, потом значение
+                    nudFilterParam1.Minimum = 1;
+                    nudFilterParam1.Maximum = 100;
+                    nudFilterParam1.Value = 30;
+                    nudFilterParam1.DecimalPlaces = 0;
+                    break;
+
+                case "Режекторный фильтр":
+                case "Полосовой фильтр":
+                    lblFilterParam1.Text = "R1:";
+                    lblFilterParam2.Text = "R2:";
+                    lblFilterParam1.Visible = true;
+                    nudFilterParam1.Visible = true;
+                    lblFilterParam2.Visible = true;
+                    nudFilterParam2.Visible = true;
+                    // Сначала устанавливаем диапазоны
+                    nudFilterParam1.Minimum = 1;
+                    nudFilterParam1.Maximum = 100;
+                    nudFilterParam2.Minimum = 1;
+                    nudFilterParam2.Maximum = 100;
+                    // Потом значения (меньше максимума!)
+                    nudFilterParam1.Value = 15;
+                    nudFilterParam2.Value = 60;
+                    nudFilterParam1.DecimalPlaces = 0;
+                    nudFilterParam2.DecimalPlaces = 0;
+                    break;
+
+                case "Узкополосный режекторный":
+                case "Узкополосный полосовой":
+                    lblFilterParam1.Text = "Центр:";
+                    lblFilterParam2.Text = "Ширина:";
+                    lblFilterParam1.Visible = true;
+                    nudFilterParam1.Visible = true;
+                    lblFilterParam2.Visible = true;
+                    nudFilterParam2.Visible = true;
+                    // Сначала диапазоны
+                    nudFilterParam1.Minimum = 1;
+                    nudFilterParam1.Maximum = 100;
+                    nudFilterParam2.Minimum = 1;
+                    nudFilterParam2.Maximum = 100;
+                    // Потом значения
+                    nudFilterParam1.Value = 40;
+                    nudFilterParam2.Value = 5;
+                    nudFilterParam1.DecimalPlaces = 0;
+                    nudFilterParam2.DecimalPlaces = 0;
+                    break;
+            }
+
+            btnFilterApply.Enabled = true;
+            btnFilterSave.Enabled = true;
+            btnFilterApply.BackColor = System.Drawing.SystemColors.Control;
+            btnFilterSave.BackColor = System.Drawing.SystemColors.Control;
+
+            if (comboFilterImage.SelectedIndex == -1)
+                comboFilterImage.SelectedIndex = 0;
+
+            // Показываем переключатель Окрестность/Фурье-образ
+            lblFreqModeNeighborhood.Visible = true;
+            panelFreqSwitch.Visible = true;
+            panelFreqKnobLeft.Visible = true;
+            panelFreqKnobRight.Visible = true;
+            lblFreqModeFourier.Visible = true;
+            SetFreqMode(0);
+        }
+
+        private void LblFreqMode_Click(object sender, EventArgs e)
+        {
+            var label = sender as Label;
+            if (label == lblFreqModeNeighborhood)
+                SetFreqMode(0);
+            else if (label == lblFreqModeFourier)
+                SetFreqMode(1);
+        }
+
+        private void PanelFreqSwitch_Click(object sender, EventArgs e)
+        {
+            // Переключаем на противоположный режим
+            SetFreqMode(freqDisplayMode == 0 ? 1 : 0);
+        }
+
+        private void SetFreqMode(int mode)
+        {
+            freqDisplayMode = mode;
+
+            if (mode == 0)
+            {
+                lblFreqModeNeighborhood.ForeColor = System.Drawing.Color.DarkBlue;
+                lblFreqModeFourier.ForeColor = System.Drawing.Color.Gray;
+                // Показываем левый круг, скрываем правый
+                panelFreqKnobLeft.Visible = true;
+                panelFreqKnobRight.Visible = false;
+            }
+            else
+            {
+                lblFreqModeNeighborhood.ForeColor = System.Drawing.Color.Gray;
+                lblFreqModeFourier.ForeColor = System.Drawing.Color.DarkBlue;
+                // Скрываем левый круг, показываем правый
+                panelFreqKnobLeft.Visible = false;
+                panelFreqKnobRight.Visible = true;
+            }
+        }
+    }
+
+    // Класс для ДПФ и частотной фильтрации
+    public static class FourierTransform
+    {
+        public struct Complex
+        {
+            public double Real;
+            public double Imag;
+
+            public Complex(double r, double i) { Real = r; Imag = i; }
+
+            public static Complex operator +(Complex a, Complex b) => new Complex(a.Real + b.Real, a.Imag + b.Imag);
+            public static Complex operator -(Complex a, Complex b) => new Complex(a.Real - b.Real, a.Imag - b.Imag);
+            public static Complex operator *(Complex a, Complex b) => new Complex(
+                a.Real * b.Real - a.Imag * b.Imag,
+                a.Real * b.Imag + a.Imag * b.Real);
+            public static Complex operator *(Complex a, double s) => new Complex(a.Real * s, a.Imag * s);
+            public static Complex operator /(Complex a, double s) => new Complex(a.Real / s, a.Imag / s);
+
+            public double Magnitude => Math.Sqrt(Real * Real + Imag * Imag);
+            public Complex Conjugate => new Complex(Real, -Imag);
+        }
+
+        // Прямое 1D ДПФ
+        private static Complex[] DFT1D(Complex[] input, bool inverse)
+        {
+            int N = input.Length;
+            Complex[] output = new Complex[N];
+            double sign = inverse ? 1.0 : -1.0;
+
+            for (int u = 0; u < N; u++)
+            {
+                Complex sum = new Complex(0, 0);
+                for (int k = 0; k < N; k++)
+                {
+                    double angle = sign * 2.0 * Math.PI * u * k / N;
+                    Complex w = new Complex(Math.Cos(angle), Math.Sin(angle));
+                    sum += input[k] * w;
+                }
+                if (!inverse) sum = sum / N;
+                output[u] = sum;
+            }
+            return output;
+        }
+
+        // Прямое 2D ДПФ (по строкам, затем по столбцам)
+        private static Complex[,] DFT2D(double[,] input)
+        {
+            int H = input.GetLength(0);
+            int W = input.GetLength(1);
+
+            // Центрирование: умножаем на (-1)^(x+y)
+            double[,] centered = new double[H, W];
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                    centered[y, x] = input[y, x] * ((x + y) % 2 == 0 ? 1.0 : -1.0);
+
+            Complex[,] temp = new Complex[H, W];
+
+            // ДПФ по строкам
+            for (int y = 0; y < H; y++)
+            {
+                Complex[] row = new Complex[W];
+                for (int x = 0; x < W; x++)
+                    row[x] = new Complex(centered[y, x], 0);
+                Complex[] dftRow = DFT1D(row, false);
+                for (int x = 0; x < W; x++)
+                    temp[y, x] = dftRow[x];
+            }
+
+            // ДПФ по столбцам
+            Complex[,] result = new Complex[H, W];
+            for (int x = 0; x < W; x++)
+            {
+                Complex[] col = new Complex[H];
+                for (int y = 0; y < H; y++)
+                    col[y] = temp[y, x];
+                Complex[] dftCol = DFT1D(col, false);
+                for (int y = 0; y < H; y++)
+                    result[y, x] = dftCol[y];
+            }
+
+            return result;
+        }
+
+        // Обратное 2D ДПФ
+        private static double[,] IDFT2D(Complex[,] dft)
+        {
+            int H = dft.GetLength(0);
+            int W = dft.GetLength(1);
+            Complex[,] temp = new Complex[H, W];
+
+            // Обратное ДПФ по столбцам
+            for (int x = 0; x < W; x++)
+            {
+                Complex[] col = new Complex[H];
+                for (int y = 0; y < H; y++)
+                    col[y] = dft[y, x];
+                Complex[] idftCol = DFT1D(col, true);
+                for (int y = 0; y < H; y++)
+                    temp[y, x] = idftCol[y];
+            }
+
+            // Обратное ДПФ по строкам
+            double[,] result = new double[H, W];
+            for (int y = 0; y < H; y++)
+            {
+                Complex[] row = new Complex[W];
+                for (int x = 0; x < W; x++)
+                    row[x] = temp[y, x];
+                Complex[] idftRow = DFT1D(row, true);
+                for (int x = 0; x < W; x++)
+                    result[y, x] = idftRow[x].Real * ((x + y) % 2 == 0 ? 1.0 : -1.0);
+            }
+
+            return result;
+        }
+
+        // Визуализация Фурье-образа
+        public static Bitmap VisualizeFourier(Complex[,] dft)
+        {
+            int H = dft.GetLength(0);
+            int W = dft.GetLength(1);
+
+            // Вычисляем логарифмическую яркость
+            double maxLog = 0;
+            double[,] logMag = new double[H, W];
+            for (int y = 0; y < H; y++)
+            {
+                for (int x = 0; x < W; x++)
+                {
+                    double mag = dft[y, x].Magnitude;
+                    logMag[y, x] = Math.Log(mag + 1.0);
+                    if (logMag[y, x] > maxLog) maxLog = logMag[y, x];
+                }
+            }
+
+            Bitmap result = new Bitmap(W, H, PixelFormat.Format32bppArgb);
+            BitmapData bd = result.LockBits(new Rectangle(0, 0, W, H), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+            byte[] data = new byte[bd.Stride * H];
+
+            double scale = maxLog > 0 ? 255.0 / maxLog : 1.0;
+
+            for (int y = 0; y < H; y++)
+            {
+                int rowOff = y * bd.Stride;
+                for (int x = 0; x < W; x++)
+                {
+                    byte val = (byte)(logMag[y, x] * scale);
+                    int off = rowOff + x * 4;
+                    data[off] = val;
+                    data[off + 1] = val;
+                    data[off + 2] = val;
+                    data[off + 3] = 255;
+                }
+            }
+
+            Marshal.Copy(data, 0, bd.Scan0, data.Length);
+            result.UnlockBits(bd);
+            return result;
+        }
+
+        // Визуализация маски фильтра (чёрно-белая)
+        public static Bitmap VisualizeMask(bool[,] mask)
+        {
+            int H = mask.GetLength(0);
+            int W = mask.GetLength(1);
+
+            Bitmap result = new Bitmap(W, H, PixelFormat.Format32bppArgb);
+            BitmapData bd = result.LockBits(new Rectangle(0, 0, W, H), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+            byte[] data = new byte[bd.Stride * H];
+
+            for (int y = 0; y < H; y++)
+            {
+                int rowOff = y * bd.Stride;
+                for (int x = 0; x < W; x++)
+                {
+                    byte val = mask[y, x] ? (byte)255 : (byte)0;
+                    int off = rowOff + x * 4;
+                    data[off] = val;
+                    data[off + 1] = val;
+                    data[off + 2] = val;
+                    data[off + 3] = 255;
+                }
+            }
+
+            Marshal.Copy(data, 0, bd.Scan0, data.Length);
+            result.UnlockBits(bd);
+            return result;
+        }
+
+        // Создание маски фильтра
+        private static bool[,] CreateMask(int H, int W, string filterType, double param1, double param2)
+        {
+            bool[,] mask = new bool[H, W];
+            int cx = W / 2, cy = H / 2;
+            double maxR = Math.Sqrt(cx * cx + cy * cy);
+
+            for (int y = 0; y < H; y++)
+            {
+                for (int x = 0; x < W; x++)
+                {
+                    double dx = x - cx;
+                    double dy = y - cy;
+                    double dist = Math.Sqrt(dx * dx + dy * dy);
+                    double normalizedR = dist / maxR * 100.0; // Нормализуем к 0..100
+
+                    switch (filterType)
+                    {
+                        case "lowpass":
+                            mask[y, x] = normalizedR <= param1;
+                            break;
+                        case "highpass":
+                            mask[y, x] = normalizedR >= param1;
+                            break;
+                        case "bandreject":
+                            mask[y, x] = normalizedR <= param1 || normalizedR >= param2;
+                            break;
+                        case "bandpass":
+                            mask[y, x] = normalizedR >= param1 && normalizedR <= param2;
+                            break;
+                        case "notchreject":
+                            // Узкополосный режекторный: обнуляем кольцо вокруг param1
+                            double bandWidth = param2;
+                            mask[y, x] = Math.Abs(normalizedR - param1) > bandWidth;
+                            break;
+                        case "notchpass":
+                            // Узкополосный полосовой: оставляем только кольцо вокруг param1
+                            double bw = param2;
+                            mask[y, x] = Math.Abs(normalizedR - param1) <= bw;
+                            break;
+                        default:
+                            mask[y, x] = true;
+                            break;
+                    }
+                }
+            }
+            return mask;
+        }
+
+        // Применение фильтра к Фурье-образу
+        public static Complex[,] ApplyFilter(Complex[,] dft, bool[,] mask)
+        {
+            int H = dft.GetLength(0);
+            int W = dft.GetLength(1);
+            Complex[,] result = new Complex[H, W];
+
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                    result[y, x] = mask[y, x] ? dft[y, x] : new Complex(0, 0);
+
+            return result;
+        }
+
+        // Полный пайплайн: канал -> Фурье -> фильтр -> обратное Фурье (с нормализацией)
+        public static Bitmap FreqFilterChannel(byte[] channel, int W, int H, string filterType, double p1, double p2)
+        {
+            // Преобразуем в double[,]
+            double[,] input = new double[H, W];
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                    input[y, x] = channel[y * W + x];
+
+            // Прямое ДПФ
+            Complex[,] dft = DFT2D(input);
+
+            // Создаём маску
+            bool[,] mask = CreateMask(H, W, filterType, p1, p2);
+
+            // Применяем фильтр
+            Complex[,] filtered = ApplyFilter(dft, mask);
+
+            // Обратное ДПФ
+            double[,] output = IDFT2D(filtered);
+
+            // НОРМАЛИЗАЦИЯ: растягиваем значения на весь диапазон 0-255
+            double minVal = double.MaxValue, maxVal = double.MinValue;
+            for (int y = 0; y < H; y++)
+            {
+                for (int x = 0; x < W; x++)
+                {
+                    if (output[y, x] < minVal) minVal = output[y, x];
+                    if (output[y, x] > maxVal) maxVal = output[y, x];
+                }
+            }
+
+            byte[] result = new byte[W * H];
+            double range = maxVal - minVal;
+            if (range > 0)
+            {
+                double scale = 255.0 / range;
+                for (int y = 0; y < H; y++)
+                    for (int x = 0; x < W; x++)
+                        result[y * W + x] = (byte)((output[y, x] - minVal) * scale);
+            }
+            else
+            {
+                // Если все значения одинаковые — просто копируем
+                for (int y = 0; y < H; y++)
+                    for (int x = 0; x < W; x++)
+                        result[y * W + x] = (byte)Math.Max(0, Math.Min(255, output[y, x]));
+            }
+
+            return CreateChannelBitmap(result, W, H);
+        }
+
+        // Полный пайплайн для цветного изображения (с автоматическим уменьшением)
+        public static Bitmap FreqFilterImage(Bitmap image, string filterType, double p1, double p2)
+        {
+            if (image == null) return null;
+
+            // Уменьшаем изображение до максимум 256×256 для скорости
+            int origW = image.Width, origH = image.Height;
+            int maxSize = 128; // Максимальный размер для БЫСТРОЙ обработки
+            Bitmap resized = null;
+            bool needsResize = origW > maxSize || origH > maxSize;
+
+            if (needsResize)
+            {
+                double scale = Math.Min((double)maxSize / origW, (double)maxSize / origH);
+                int newW = (int)(origW * scale);
+                int newH = (int)(origH * scale);
+                resized = new Bitmap(image, newW, newH);
+            }
+            else
+            {
+                resized = new Bitmap(image);
+            }
+
+            int W = resized.Width, H = resized.Height;
+            BitmapData bd = resized.LockBits(new Rectangle(0, 0, W, H), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+            byte[] src = new byte[bd.Stride * H];
+            Marshal.Copy(bd.Scan0, src, 0, src.Length);
+            resized.UnlockBits(bd);
+
+            byte[] r = new byte[W * H], g = new byte[W * H], b = new byte[W * H];
+            for (int y = 0; y < H; y++)
+            {
+                int rowOff = y * bd.Stride;
+                for (int x = 0; x < W; x++)
+                {
+                    int off = rowOff + x * 4;
+                    int idx = y * W + x;
+                    b[idx] = src[off];
+                    g[idx] = src[off + 1];
+                    r[idx] = src[off + 2];
+                }
+            }
+
+            Bitmap rBmp = FreqFilterChannel(r, W, H, filterType, p1, p2);
+            Bitmap gBmp = FreqFilterChannel(g, W, H, filterType, p1, p2);
+            Bitmap bBmp = FreqFilterChannel(b, W, H, filterType, p1, p2);
+
+            Bitmap resultSmall = new Bitmap(W, H, PixelFormat.Format32bppArgb);
+            BitmapData rd = resultSmall.LockBits(new Rectangle(0, 0, W, H), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+            byte[] dst = new byte[rd.Stride * H];
+            byte[] rData = ExtractChannelData(rBmp);
+            byte[] gData = ExtractChannelData(gBmp);
+            byte[] bData = ExtractChannelData(bBmp);
+
+            for (int y = 0; y < H; y++)
+            {
+                int rowOff = y * rd.Stride;
+                for (int x = 0; x < W; x++)
+                {
+                    int idx = y * W + x;
+                    int off = rowOff + x * 4;
+                    dst[off] = bData[idx];
+                    dst[off + 1] = gData[idx];
+                    dst[off + 2] = rData[idx];
+                    dst[off + 3] = 255;
+                }
+            }
+            Marshal.Copy(dst, 0, rd.Scan0, dst.Length);
+            resultSmall.UnlockBits(rd);
+
+            rBmp.Dispose(); gBmp.Dispose(); bBmp.Dispose();
+
+            // Восстанавливаем исходный размер
+            Bitmap finalResult;
+            if (needsResize)
+            {
+                finalResult = new Bitmap(image.Width, image.Height);
+                using (Graphics gfx = Graphics.FromImage(finalResult))
+                {
+                    gfx.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    gfx.DrawImage(resultSmall, 0, 0, image.Width, image.Height);
+                }
+                resultSmall.Dispose();
+            }
+            else
+            {
+                finalResult = resultSmall;
+            }
+
+            resized.Dispose();
+            return finalResult;
+        }
+
+        private static byte[] ExtractChannelData(Bitmap bmp)
+        {
+            int W = bmp.Width, H = bmp.Height;
+            BitmapData bd = bmp.LockBits(new Rectangle(0, 0, W, H), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+            byte[] src = new byte[bd.Stride * H];
+            Marshal.Copy(bd.Scan0, src, 0, src.Length);
+            bmp.UnlockBits(bd);
+
+            byte[] ch = new byte[W * H];
+            for (int y = 0; y < H; y++)
+            {
+                int rowOff = y * bd.Stride;
+                for (int x = 0; x < W; x++)
+                    ch[y * W + x] = src[rowOff + x * 4]; // Берём синий канал (все одинаковые)
+            }
+            return ch;
+        }
+
+        private static Bitmap CreateChannelBitmap(byte[] ch, int W, int H)
+        {
+            Bitmap bmp = new Bitmap(W, H, PixelFormat.Format32bppArgb);
+            BitmapData bd = bmp.LockBits(new Rectangle(0, 0, W, H), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+            byte[] data = new byte[bd.Stride * H];
+            for (int y = 0; y < H; y++)
+            {
+                int rowOff = y * bd.Stride;
+                for (int x = 0; x < W; x++)
+                {
+                    int off = rowOff + x * 4;
+                    byte val = ch[y * W + x];
+                    data[off] = val;
+                    data[off + 1] = val;
+                    data[off + 2] = val;
+                    data[off + 3] = 255;
+                }
+            }
+            Marshal.Copy(data, 0, bd.Scan0, data.Length);
+            bmp.UnlockBits(bd);
+            return bmp;
+        }
+
+        // Визуализация Фурье-образа + маски
+        public static Bitmap VisualizeFreqFilter(Bitmap image, string filterType, double p1, double p2)
+        {
+            if (image == null) return null;
+            int W = image.Width, H = image.Height;
+            // Создаём маску мгновенно (без ДПФ!)
+            bool[,] mask = CreateMask(H, W, filterType, p1, p2);
+            return VisualizeMask(mask);
+        }
+
+        // Визуализация полного Фурье-образа (с уменьшением для скорости)
+        public static Bitmap VisualizeFullFourier(Bitmap image)
+        {
+            if (image == null) return null;
+
+            // Уменьшаем до максимум 128×128 для БЫСТРОЙ визуализации
+            int origW = image.Width, origH = image.Height;
+            int maxSize = 128;
+            Bitmap resized = null;
+
+            if (origW > maxSize || origH > maxSize)
+            {
+                double scale = Math.Min((double)maxSize / origW, (double)maxSize / origH);
+                int newW = (int)(origW * scale);
+                int newH = (int)(origH * scale);
+                resized = new Bitmap(image, newW, newH);
+            }
+            else
+            {
+                resized = new Bitmap(image);
+            }
+
+            int W = resized.Width, H = resized.Height;
+            BitmapData bd = resized.LockBits(new Rectangle(0, 0, W, H), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+            byte[] src = new byte[bd.Stride * H];
+            Marshal.Copy(bd.Scan0, src, 0, src.Length);
+            resized.UnlockBits(bd);
+
+            double[,] gray = new double[H, W];
+            for (int y = 0; y < H; y++)
+            {
+                int rowOff = y * bd.Stride;
+                for (int x = 0; x < W; x++)
+                {
+                    int off = rowOff + x * 4;
+                    gray[y, x] = 0.2125 * src[off + 2] + 0.7154 * src[off + 1] + 0.0721 * src[off];
+                }
+            }
+
+            Complex[,] dft = DFT2D(gray);
+            Bitmap result = VisualizeFourier(dft);
+
+            // Растягиваем обратно до исходного размера для отображения
+            if (origW > maxSize || origH > maxSize)
+            {
+                Bitmap stretched = new Bitmap(origW, origH);
+                using (Graphics g = Graphics.FromImage(stretched))
+                {
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+                    g.DrawImage(result, 0, 0, origW, origH);
+                }
+                result.Dispose();
+                resized.Dispose();
+                return stretched;
+            }
+
+            resized.Dispose();
+            return result;
         }
     }
 
